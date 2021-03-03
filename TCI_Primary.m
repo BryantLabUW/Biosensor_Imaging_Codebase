@@ -176,11 +176,11 @@ end
 if analysislogic == 1
     global assaytype
     if assaytype ~= 2
-        headers={'UIDs','AtTh_Spearmans_R','AboveTh_Spearmans_R','Tstar', 'Maximal_Temp',strcat('ResponseSize_',num2str(Stim.Analysis(1)),'C'),strcat('ResponseSize_',num2str(Stim.Analysis(2)),'C'), strcat('ResponseSize_',num2str(Stim.max),'C')};
-        T=table(UIDs',Results.Corr.AtTh.R',Results.Corr.AboveTh.R',Results.Thresh.temp',Results.maximalTemp', Results.ResponseBin1', Results.ResponseBin2',Results.MaxTempResponse','VariableNames',headers);
+        headers={'UIDs','AtTh_Spearmans_R','AboveTh_Spearmans_R','Tstar', 'Maximal_Temp', 'Minimal_Temp', 'ResponseSize_AtThreshold'};
+        T=table(UIDs',Results.Corr.AtTh.R',Results.Corr.AboveTh.R',Results.Thresh.temp',Results.maximalTemp', Results.minimalTemp', Results.Thresh.index','VariableNames',headers);
     elseif assaytype == 2
-        headers={'UIDs','BelowTh_Pearsons_R', 'Tstar', strcat('ResponseSize_',num2str(Stim.Analysis(1)),'C'),strcat('ResponseSize_',num2str(Stim.Analysis(2)),'C')};
-        T=table(UIDs',Results.Corr.BelowTh.R', Results.Thresh.temp', Results.ResponseBin1', Results.ResponseBin2','VariableNames',headers);
+        headers={'UIDs','BelowTh_Pearsons_R', 'Tstar', 'Minimal_Temp',strcat('ResponseSize_',num2str(Stim.Analysis(1)),'C'),strcat('ResponseSize_',num2str(Stim.Analysis(2)),'C'),'ResponseSize_AtThreshold'};
+        T=table(UIDs',Results.Corr.BelowTh.R', Results.Thresh.temp', Results.minimalTemp', Results.ResponseBin1', Results.ResponseBin2',Results.Thresh.index','VariableNames',headers);
     end
     writetable(T,fullfile(newdir,strcat(n,'_results.xlsx')), 'Sheet', 1);
     

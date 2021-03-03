@@ -33,97 +33,6 @@ if assaytype ~= 2
         
     end
     
-    %% Calculate Temperature at which point Experimental trace rises above 3*STD of control trace for at least N seconds
-    % Ramp rate is 0.025C/s, so the time it would take to increase 1C is 40 seconds, which equals 80 frames.
-    % Define threshold for calcium response as 3*std of Stim.F0 response.
-    %     for i = 1:size(Temps.subset,2)
-    %         base(i)=mean(CaResponse.subset(find(Temps.subset(:,i)<=(Stim.F0+.2) & Temps.subset(:,i) >= (Stim.F0 - 0.2)),i));
-    %         stdbase(i)=std(CaResponse.subset(find(Temps.subset(:,i)<=(Stim.F0+.2) & Temps.subset(:,i) >= (Stim.F0 - 0.2)),i));
-    %         threshold(i) = (3*abs(stdbase(i))); %+ abs(base(i));
-    %
-    %         % Only look for threshold during the upwards temperature ramp
-    %         if ~isempty(find((CaResponse.subset(time.soak:end,i))>=threshold(i),1,'first'))
-    %         Results.Thresh.index(i) = find((CaResponse.subset(time.soak:end,i))>=threshold(i),1,'first');
-    %         Results.Thresh.temp(i) = (Temps.subset(Results.Thresh.index(i)+(time.soak-1),i));
-    %         else
-    %             Results.Thresh.index(i) = NaN;
-    %             Results.Thresh.temp(i) = NaN;
-    %         end
-    %     end
-    
-    % Only look for threshold during the upwards temperature ramp
-    for i = 1:size(Temps.subset,2)
-        base(i)=mean(CaResponse.subset(find(Temps.subset(:,i)<=(Stim.F0+.2) & Temps.subset(:,i) >= (Stim.F0 - 0.2)),i));
-        stdbase(i)=std(CaResponse.subset(find(Temps.subset(:,i)<=(Stim.F0+.2) & Temps.subset(:,i) >= (Stim.F0 - 0.2)),i));
-        threshold(i) = (3*abs(stdbase(i))); %+ abs(base(i));
-    end
-    
-    n_expt = size(CaResponse.subset,2);
-    disp(strcat('number of recordings: ',num2str(n_expt)));
-
-    N = 20; % required number of consectuive numbers following a first one (with a 500 ms frame rate, this is N*2 seconds)
-    
-    % RUN THIS FOR EACH INDIVIDUAL EXPERIMENTAL TRACE
-    II = arrayfun(@(x)(find(CaResponse.subset(:,x)>=threshold(x) | CaResponse.subset(:,x)<=-threshold(x))), [1:n_expt], 'UniformOutput', false);
-    kk = arrayfun(@(x)([true;diff(II{x})~=1]), [1:n_expt], 'UniformOutput', false);
-    ss = arrayfun(@(x)(cumsum(kk{x})), [1:n_expt], 'UniformOutput', false);
-    xx = arrayfun(@(x)(histc(ss{x},1:ss{x}(end))), [1:n_expt], 'UniformOutput', false);
-    idxx = arrayfun(@(x)(find(kk{x})), [1:n_expt], 'UniformOutput', false);
-    outt = arrayfun(@(x)(II{x}(idxx{x}(xx{x} >= N))), [1:n_expt], 'UniformOutput', false);
-    
-    
-    % Find Calcium Response at Temperature Thresh
-    for x = 1:n_expt
-        
-        if ~isempty(outt{x})
-            Results.Thresh.index(x) = CaResponse.subset(outt{x}(1),x);
-        else
-            Results.Thresh.index(x) = NaN;
-        end
-    end
-    
-    % Get Temperature Threshold
-    for x = 1:n_expt
-        
-        if ~isempty(outt{x})
-            Results.Thresh.temp(x) = Temps.subset(outt{x}(1),x);
-        else
-            Results.Thresh.temp(x) = NaN;
-        end
-    end
-    
-    for x = 1:n_expt
-    
-    if ~isempty(outt{x})
-        plot_outt(x) = (outt{x}(1));
-    else
-        plot_outt(x) = NaN;
-    end
-end
-    
-    % Get the average of the individual thresholds (for the Ca Response and Temperature
-% trace)
-Results.Thresh_temp = median(Results.Thresh.temp, 'omitnan');
-disp(strcat('Median T*: ',num2str(Results.Thresh_temp)));
-
-Results.Tx = median(Results.Thresh.index, 'omitnan');
-
-% Align the full and subset traces to identify the timing of the threshold
-% cross
-for i = 1:n_expt
-[~, ia, ~] = intersect(CaResponse.full(:,i), CaResponse.subset(:,i), 'stable');
-time_adjustment_index(i) = ia(1) - 1;
-end
-
-Results.out = median((plot_outt + time_adjustment_index), 'omitnan');
-    
-    %% Calculate temperature that elicits maximal response
-    [m, I] = max(CaResponse.subset,[],1,'linear');
-    Results.maximalTemp = Temps.subset(I);
-    
-    Tmax_temp = median(Results.maximalTemp, 'omitnan');
-    disp(strcat('Median Tmax: ',num2str(Tmax_temp)));
-    
     %% Calculate and plot linear regression of different temperature windows
     set(0,'DefaultFigureVisible','off');
     [Results.rsq.AtTh, Results.Corr.AtTh] = TCI_ResponseFitting(Temps.AtTh, CaResponse.AtTh,2,strcat(n,'_AtTh_'));
@@ -131,11 +40,8 @@ Results.out = median((plot_outt + time_adjustment_index), 'omitnan');
     
     set(0,'DefaultFigureVisible','on');
     
-end
-
-if assaytype == 2
-    
-    %% Generate data subsets
+else
+    %% Generate data subsets for negative thermotaxis ramps
     [CaResponse.BelowTh, Temps.BelowTh] = deal(NaN(size(Temps.subset)));
     
     for i = 1:size(Temps.subset,2)
@@ -147,29 +53,108 @@ if assaytype == 2
         CaResponse.BelowTh(trim(i)+1:end,i)=NaN;
     end
     
+    
     %% Calculate and plot linear regression of different temperature windows
     set(0,'DefaultFigureVisible','off');
     [Results.rsq.BelowTh, Results.Corr.BelowTh] = TCI_ResponseFitting(Temps.BelowTh, CaResponse.BelowTh,1,strcat(n,'_BelowTh_'));
     set(0,'DefaultFigureVisible','on');
+end
+
+%% Calculate Temperature at which point Experimental trace rises above 3*STD of control trace for at least N seconds
+% The amount of time the trace should be above threshold should reflect 0.25 degree C
+% Calculate based on ramp rate such that:
+% If ramp rate is 0.025C/s, the time it would take to increase 0.25C is 10 seconds, which equals 20 frames.
+
+for i = 1:size(Temps.subset,2)
+    base(i)=mean(CaResponse.subset(find(Temps.subset(:,i)<=(Stim.F0+.2) & Temps.subset(:,i) >= (Stim.F0 - 0.2)),i));
+    stdbase(i)=std(CaResponse.subset(find(Temps.subset(:,i)<=(Stim.F0+.2) & Temps.subset(:,i) >= (Stim.F0 - 0.2)),i));
+    threshold(i) = (3*abs(stdbase(i))); %+ abs(base(i));
+end
+
+n_expt = size(CaResponse.subset,2);
+disp(strcat('number of recordings: ',num2str(n_expt)));
+
+N = 0.25/time.rampspeed*2; % required number of consectuive numbers following a first one (with a 500 ms frame rate, this is N/2 seconds)
+
+if assaytype ~= 2
+    % RUN THIS FOR EACH INDIVIDUAL EXPERIMENTAL TRACE
+    II = arrayfun(@(x)(find(CaResponse.subset(:,x)>=threshold(x) | CaResponse.subset(:,x)<=-threshold(x))), [1:n_expt], 'UniformOutput', false);
+    kk = arrayfun(@(x)([true;diff(II{x})~=1]), [1:n_expt], 'UniformOutput', false);
+    ss = arrayfun(@(x)(cumsum(kk{x})), [1:n_expt], 'UniformOutput', false);
+    xx = arrayfun(@(x)(histc(ss{x},1:ss{x}(end))), [1:n_expt], 'UniformOutput', false);
+    idxx = arrayfun(@(x)(find(kk{x})), [1:n_expt], 'UniformOutput', false);
+    outt = arrayfun(@(x)(II{x}(idxx{x}(xx{x} >= N))), [1:n_expt], 'UniformOutput', false);
     
+else
+    % RUN THIS FOR EACH INDIVIDUAL EXPERIMENTAL TRACE
+    % Only look for threshold during the negative temp ramp
+    II = arrayfun(@(x)(find(CaResponse.subset(time.soak:end,x)>=threshold(x) | CaResponse.subset(time.soak:end,x)<=-threshold(x))), [1:n_expt], 'UniformOutput', false);
+    kk = arrayfun(@(x)([true;diff(II{x})~=1]), [1:n_expt], 'UniformOutput', false);
+    ss = arrayfun(@(x)(cumsum(kk{x})), [1:n_expt], 'UniformOutput', false);
+    xx = arrayfun(@(x)(histc(ss{x},1:ss{x}(end))), [1:n_expt], 'UniformOutput', false);
+    idxx = arrayfun(@(x)(find(kk{x})), [1:n_expt], 'UniformOutput', false);
+    outt = arrayfun(@(x)(II{x}(idxx{x}(xx{x} >= N))), [1:n_expt], 'UniformOutput', false);
+    outt = arrayfun(@(x)(outt{x}+time.soak), [1:n_expt], 'UniformOutput', false);
+end
+
+% Find Calcium Response at Temperature Thresh
+for x = 1:n_expt
     
-    %% Calculate T(thresh) for each recording using Ca Reponse Values
-    % Define threshold for calcium response as a deviation 3*std of Stim.F0 response.
-    for i = 1:size(Temps.subset,2)
-        base(i)=mean(CaResponse.subset(find(Temps.subset(:,i)<=(Stim.F0+.2) & Temps.subset(:,i) >= (Stim.F0 - 0.2)),i));
-        stdbase(i)=std(CaResponse.subset(find(Temps.subset(:,i)<=(Stim.F0+.2) & Temps.subset(:,i) >= (Stim.F0 - 0.2)),i));
-        threshold(i) = (3*abs(stdbase(i))); %+ abs(base(i));
-        
-        % Only look for threshold during the negative temp ramp
-        if isempty(find(abs(CaResponse.subset(time.soak:end,i))>=threshold(i),1,'first'))
-            Results.Thresh.index(i) = NaN;
-            Results.Thresh.temp(i) = NaN;
-        else
-            Results.Thresh.index(i) = find(abs(CaResponse.subset(time.soak:end,i))>=threshold(i),1,'first'); %Abs gets me any deviation from baseline, large or small
-            Results.Thresh.temp(i) = (Temps.subset(Results.Thresh.index(i)+(time.soak-1),i));
-        end
+    if ~isempty(outt{x})
+        Results.Thresh.index(x) = CaResponse.subset(outt{x}(1),x);
+    else
+        Results.Thresh.index(x) = NaN;
     end
 end
+
+% Get Temperature Threshold
+for x = 1:n_expt
+    
+    if ~isempty(outt{x})
+        Results.Thresh.temp(x) = Temps.subset(outt{x}(1),x);
+    else
+        Results.Thresh.temp(x) = NaN;
+    end
+end
+
+for x = 1:n_expt
+    
+    if ~isempty(outt{x})
+        plot_outt(x) = (outt{x}(1));
+    else
+        plot_outt(x) = NaN;
+    end
+end
+
+% Get the average of the individual thresholds (for the Ca Response and Temperature
+% trace)
+Results.Thresh_temp = median(Results.Thresh.temp, 'omitnan');
+disp(strcat('Median T*: ',num2str(Results.Thresh_temp)));
+
+Results.Tx = median(Results.Thresh.index, 'omitnan');
+
+% Align the full and subset traces to identify the timing of the threshold
+% cross
+for i = 1:n_expt
+    [~, ia, ~] = intersect(CaResponse.full(:,i), CaResponse.subset(:,i), 'stable');
+    time_adjustment_index(i) = ia(1) - 1;
+end
+
+Results.out = median((plot_outt + time_adjustment_index), 'omitnan');
+
+%% Calculate temperature that elicits maximal response
+[m, I] = max(CaResponse.subset,[],1,'linear');
+Results.maximalTemp = Temps.subset(I);
+
+Tmax_temp = median(Results.maximalTemp, 'omitnan');
+disp(strcat('Median Tmax: ',num2str(Tmax_temp)));
+
+%% Calculate temperature that elicits most negative response
+[m, I] = min(CaResponse.subset,[],1,'linear');
+Results.minimalTemp = Temps.subset(I);
+
+Tmin_temp = median(Results.minimalTemp, 'omitnan');
+disp(strcat('Median Tmin: ',num2str(Tmin_temp)));
 
 %% Calculate average CaResponse at given temperature bins
 for i = 1:size(Temps.subset,2)

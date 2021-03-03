@@ -61,9 +61,9 @@ if isempty(AlignedData)
     error('No overlap between image times and temperature times. Likely gave Matlab the wrong ATEC Temp Log');
 end
 
-%% Calculate baseline, defined as time spent at a stated F0 temp + 0.4/ - 0.4 (.2 is the fudge factor on the ATEC machine, going lower on the cooler side in case things are overshot. This is currently a hack think about it a bit more)
+%% Calculate baseline, defined as time spent at a stated F0 temp + 0.6/ - 0.6 (.2 is the fudge factor on the ATEC machine, going lower on the cooler side in case things are overshot. This is currently a hack think about it a bit more)
 dblAlignedData = AlignedData.Variables;
-IND=find(dblAlignedData(:,6)<=(Stim.F0+.4) & dblAlignedData(:,6)>=(Stim.F0-0.4));
+IND=find(dblAlignedData(:,6)<=(Stim.F0+.4) & dblAlignedData(:,6)>=(Stim.F0-0.6));
 ibins = [1 ; find(diff(IND)>1); size(IND,1)];
 [M, I] = max(diff(ibins));
 indeces = [IND(ibins(I)+1):IND(ibins(I+1))];

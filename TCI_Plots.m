@@ -48,16 +48,13 @@ if numfiles > 1
     
     % Multiple line plot
     if pltmulti == 1
-        MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n);
+        MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n, Results.Tx, Results.out, Results.Thresh_temp);
     end
     
     % Normalize traces to the maximum calcium
     % response amongst all traces.
     CaResponse.norm = CaResponse.subset/max(max(CaResponse.subset));
     % Correlation plots and Heatmap with normalized data
-    
-    
-    
     
     if pltheat == 1
         setaxes = 1;
@@ -452,7 +449,7 @@ saveas(gcf, fullfile(newdir,['/', n, '-Temperature vs CaResponse_lines']),'jpeg'
 close all
 end
 
-function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, n)
+function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, n, Tx, out, avg_Thresh_temp)
 global newdir
 
 
@@ -465,7 +462,7 @@ hold on;
 
 plot([1:size(Ca,1)],Ca,'-');
 
-%plot(out,Tx,'bo');
+plot(out,Tx,'bo');
 hold off;
 xlim([0, size(Ca,1)]);
 ylim([floor(min(min(Ca))),ceil(max(max(Ca)))]);
@@ -477,7 +474,8 @@ ylabel('dR/R0 (%)');
 ax.dwn = subplot(3,1,3);
 shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'k',0);
 set(gca,'xtickMode', 'auto');
-
+hold on; plot(out, avg_Thresh_temp, 'bo')
+hold off;
 ylim([floor(min(avg_Tmp)-max(err_Tmp)),ceil(max(avg_Tmp)+max(err_Tmp))]);
 ylim([19, 41]);
 xlim([0, size(Ca,1)]);
