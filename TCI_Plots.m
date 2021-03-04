@@ -460,13 +460,14 @@ ax.up = subplot(3,1,[1:2]);
 
 hold on;
 
-plot([1:size(Ca,1)],Ca,'-');
+xline(out,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+plot([1:size(Ca,1)],Ca, 'LineWidth', 1);
+plot([1:size(Ca,1)],median(Ca,2, 'omitnan'),'LineWidth', 2, 'Color', 'k');
 
-plot(out,Tx,'bo');
 hold off;
 xlim([0, size(Ca,1)]);
 ylim([floor(min(min(Ca))),ceil(max(max(Ca)))]);
-ylim([-20, 210]);
+ylim([-50, 100]);
 
 set(gca,'XTickLabel',[]);
 ylabel('dR/R0 (%)');
@@ -474,10 +475,11 @@ ylabel('dR/R0 (%)');
 ax.dwn = subplot(3,1,3);
 shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'k',0);
 set(gca,'xtickMode', 'auto');
-hold on; plot(out, avg_Thresh_temp, 'bo')
+hold on; 
+xline(out,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
 hold off;
 ylim([floor(min(avg_Tmp)-max(err_Tmp)),ceil(max(avg_Tmp)+max(err_Tmp))]);
-ylim([19, 41]);
+ylim([10, 41]);
 xlim([0, size(Ca,1)]);
 ylabel('Temperature (celcius)','Color','k');
 xlabel('Time (seconds)');

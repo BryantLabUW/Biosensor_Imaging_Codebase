@@ -12,7 +12,8 @@ function [Temps, CaResponse] = TCI_Primary ()
 %   2021-02-17  Made updates to analysis and plotting, also put all
 %               associated files on GitHub so this revision history is now defunct
 
-
+clear all
+close all
 warning('off','all'); % Don't display warnings
 
 %% Select .csv file(s) or .mat file containing imaging data
@@ -119,8 +120,7 @@ if isempty(preprocessed) || preprocessed == 0
     % Need to pick temperature log.
     preprocessed = 0;
     
-    %[tempn, tempp] = uigetfile('*.dat', 'Select concatenated temperature readings file',pathstr);
-    [tempn, tempp] = uigetfile('*.dat', 'Select concatenated temperature readings file','D:\Hallem Lab\Astra\S stercoralis');
+    [tempn, tempp] = uigetfile2('*.dat', 'Select concatenated temperature readings file',pathstr);
     if isequal(tempn,0)
         error('User canceled analysis session');
     end
