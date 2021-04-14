@@ -15,28 +15,38 @@ function [Temps, CaResponse, Results] = TCI_Quantifications (Temps,CaResponse, S
 
 global assaytype
 
-CaResponse.nsub = CaResponse.subset./max(CaResponse.full);
+%CaResponse.nsub = CaResponse.subset./max(CaResponse.full);
 
 if assaytype ~= 2
     %% Generate data subsets for positive thermotaxis ramps
     [CaResponse.AtTh, Temps.AtTh, ...
-        CaResponse.AboveTh, Temps.AboveTh] = deal(NaN(size(Temps.subset)));
+        CaResponse.AboveTh, Temps.AboveTh, ...
+        CaResponse.Tmax, Temps.Tmax] = deal(NaN(size(Temps.subset)));
     
     for i = 1:size(Temps.subset,2)
         % Temperature bin of Near T(holding)
         Temps.AtTh(1:size(find(Temps.subset(:,i)>=Stim.NearTh(1) & Temps.subset(:,i)<=Stim.NearTh(2)),1),i) = Temps.subset(find(Temps.subset(:,i)>=Stim.NearTh(1) & Temps.subset(:,i)<=Stim.NearTh(2)),i);
-        CaResponse.AtTh(1:size(find(Temps.subset(:,i)>=Stim.NearTh(1) & Temps.subset(:,i)<=Stim.NearTh(2)),1),i) = CaResponse.nsub(find(Temps.subset(:,i)>=Stim.NearTh(1) & Temps.subset(:,i)<=Stim.NearTh(2)),i);
+        CaResponse.AtTh(1:size(find(Temps.subset(:,i)>=Stim.NearTh(1) & Temps.subset(:,i)<=Stim.NearTh(2)),1),i) = CaResponse.subset(find(Temps.subset(:,i)>=Stim.NearTh(1) & Temps.subset(:,i)<=Stim.NearTh(2)),i);
         
         % Temperature bin of above T(holding)
         Temps.AboveTh(1:size(find(Temps.subset(:,i)>=Stim.AboveTh(1)),1),i) = Temps.subset(find(Temps.subset(:,i)>=Stim.AboveTh(1)),i);
-        CaResponse.AboveTh(1:size(find(Temps.subset(:,i)>=Stim.AboveTh(1)),1),i) = CaResponse.nsub(find(Temps.subset(:,i)>=Stim.AboveTh(1)),i);
+        CaResponse.AboveTh(1:size(find(Temps.subset(:,i)>=Stim.AboveTh(1)),1),i) = CaResponse.subset(find(Temps.subset(:,i)>=Stim.AboveTh(1)),i);
+        
+        % Temperature bin of near T(max)
+        Temps.Tmax(1:size(find(Temps.full(:,i)>=Stim.max(1)-1),1),i) = Temps.full(find(Temps.full(:,i)>=Stim.max(1)-1),i);
+        CaResponse.Tmax(1:size(find(Temps.full(:,i)>=Stim.max(1)-1),1),i) = CaResponse.full(find(Temps.full(:,i)>=Stim.max(1)-1),i);
         
     end
     
     %% Calculate and plot linear regression of different temperature windows
+    % When calling TCI_ResponseFitting.m, users choose whether to calculate
+    % Spearman's or Pearson's correlation using the 3rd input variable.
+    % 1 = Pearson's correlation, for quantifying linear correlation
+    % 2 = Spearman's correlation, for quantifying monotonic correlations
     set(0,'DefaultFigureVisible','off');
     [Results.rsq.AtTh, Results.Corr.AtTh] = TCI_ResponseFitting(Temps.AtTh, CaResponse.AtTh,2,strcat(n,'_AtTh_'));
-    [Results.rsq.AboveTh, Results.Corr.AboveTh] = TCI_ResponseFitting(Temps.AboveTh, CaResponse.AboveTh,2,strcat(n,'_AboveTh_'));
+    [Results.rsq.AboveThPear, Results.Corr.AboveThPear] = TCI_ResponseFitting(Temps.AboveTh, CaResponse.AboveTh,1,strcat(n,'_AboveThPear_'));
+    [Results.rsq.AboveThSpear, Results.Corr.AboveThSpear] = TCI_ResponseFitting(Temps.AboveTh, CaResponse.AboveTh,2,strcat(n,'_AboveThSpear_'));
     
     set(0,'DefaultFigureVisible','on');
     
@@ -47,7 +57,7 @@ else
     for i = 1:size(Temps.subset,2)
         % Temperature bin of descending portion
         Temps.BelowTh(1:size(find(Temps.subset(:,i)<=(Stim.BelowTh(1)+0.2) & Temps.subset(:,i)>= (Stim.BelowTh(2)-0.2)),1),i) = Temps.subset(find(Temps.subset(:,i)<=(Stim.BelowTh(1)+0.2) & Temps.subset(:,i)>= (Stim.BelowTh(2)-0.2)),i);
-        CaResponse.BelowTh(1:size(find(Temps.subset(:,i)<=(Stim.BelowTh(1)+0.2) & Temps.subset(:,i)>= (Stim.BelowTh(2)-0.2)),1),i) = CaResponse.nsub(find(Temps.subset(:,i)<=(Stim.BelowTh(1)+0.2) & Temps.subset(:,i)>= (Stim.BelowTh(2)-0.2)),i);
+        CaResponse.BelowTh(1:size(find(Temps.subset(:,i)<=(Stim.BelowTh(1)+0.2) & Temps.subset(:,i)>= (Stim.BelowTh(2)-0.2)),1),i) = CaResponse.subset(find(Temps.subset(:,i)<=(Stim.BelowTh(1)+0.2) & Temps.subset(:,i)>= (Stim.BelowTh(2)-0.2)),i);
         trim(i) = find(Temps.BelowTh(:,i)<=(Stim.BelowTh(2)+.2),1,'last');
         Temps.BelowTh(trim(i)+1:end,i)=NaN;
         CaResponse.BelowTh(trim(i)+1:end,i)=NaN;
@@ -55,6 +65,10 @@ else
     
     
     %% Calculate and plot linear regression of different temperature windows
+    % When calling TCI_ResponseFitting.m, users choose whether to calculate
+    % Spearman's or Pearson's correlation using the 3rd input variable.
+    % 1 = Pearson's correlation, for quantifying linear correlation
+    % 2 = Spearman's correlation, for quantifying monotonic correlations
     set(0,'DefaultFigureVisible','off');
     [Results.rsq.BelowTh, Results.Corr.BelowTh] = TCI_ResponseFitting(Temps.BelowTh, CaResponse.BelowTh,1,strcat(n,'_BelowTh_'));
     set(0,'DefaultFigureVisible','on');
@@ -157,20 +171,67 @@ Tmin_temp = median(Results.minimalTemp, 'omitnan');
 disp(strcat('Median Tmin: ',num2str(Tmin_temp)));
 
 %% Calculate average CaResponse at given temperature bins
-for i = 1:size(Temps.subset,2)
-    Results.ResponseBin1(i) = mean(CaResponse.subset(find(Temps.subset(:,i)>=Stim.Analysis(1)-.2 & Temps.subset(:,i)<=Stim.Analysis(1)+.2),i));
-    Results.ResponseBin2(i) = mean(CaResponse.subset(find(Temps.subset(:,i)>=Stim.Analysis(2)-.2 & Temps.subset(:,i)<=Stim.Analysis(2)+.2),i));
+for i = 1:n_expt
+    Results.ResponseBin1(i) = median(CaResponse.subset(find(Temps.subset(:,i)>=Stim.Analysis(1)-.2 & Temps.subset(:,i)<=Stim.Analysis(1)+.2),i));
+    
+    Results.ResponseBin2(i) = median(CaResponse.subset(find(Temps.subset(:,i)>=Stim.Analysis(2)-.2 & Temps.subset(:,i)<=Stim.Analysis(2)+.2),i));
 end
 
+%% Calculate average CaResponse at at holding temp during prestimulus period
+for i = 1:n_expt
+    Results.Prestim(i) = median(CaResponse.prestim(find(Temps.prestim(:,i)>=Stim.holding-.2 & Temps.prestim(:,i)<=Stim.holding+.2),i));
+end
+
+
 %% Calculate average CaResponse at max temperature
-for i = 1:size(Temps.subset,2)
-    Results.MaxTempResponse(i) = mean(CaResponse.subset(find(Temps.subset(:,i)>=Stim.max-.2 & Temps.subset(:,i)<=Stim.max+.2),i));
+for i = 1:n_expt
+    Results.MaxTempResponse(i) = median(CaResponse.subset(find(Temps.subset(:,i)>=Stim.max-.2 & Temps.subset(:,i)<=Stim.max+.2),i));
+end
+
+%% Get response during first 15 seconds of Stim.max
+for i = 1:n_expt
+    temp = (CaResponse.full(find(Temps.full(:,i)>=Stim.max-.2, 1,'first'):find(Temps.full(:,i)>=Stim.max-.2, 1,'last'),i));
+    if assaytype ~=2
+        Results.AdaptBins(1,i) = median(temp(1:15));
+        Results.AdaptBins(2,i) = median(temp(31:end));
+    end   
+end
+
+%% Categorize if the various responses
+        % as greater, lesser, or not different than the holding response
+for i = 1:n_expt
+     if assaytype ~=2
+        if assaytype ~= 4
+            % If this is a stimulus where holding response is higher than
+            % F0, calculate the threshold from the prestim period
+            for i = 1:size(Temps.prestim,2)
+                base(i)=mean(CaResponse.prestim(find(Temps.prestim(:,i)<=(Stim.holding+.2) & Temps.prestim(:,i) >= (Stim.holding - 0.2)),i));
+                stdbase(i)=std(CaResponse.prestim(find(Temps.prestim(:,i)<=(Stim.holding+.2) & Temps.prestim(:,i) >= (Stim.holding - 0.2)),i));
+                threshold(i) = (3*abs(stdbase(i))); %+ abs(base(i));    
+            end   
+         end   
+            % If this is a reversal stimulus, then the holding response is
+            % F0 and threshold is as defined above
+            
+            % Categorize first 15 seconds of Tmax response
+            above = (Results.AdaptBins(1,:) >= threshold);
+            below = (Results.AdaptBins(1,:) <= -threshold)*-1;
+            Results.TmaxEarly_Cat = above + below;
+            
+            % Categorize late Tmax response
+            above = (Results.AdaptBins(2,:) >= threshold);
+            below = (Results.AdaptBins(2,:) <= -threshold)*-1;
+            Results.TmaxLate_Cat = above + below;        
+    end   
 end
 
 %% Calculate average CaResponse at F0 temperature
-for i = 1:size(Temps.subset,2)
-    Results.F0TempResponse(i) = mean(CaResponse.subset(find(Temps.subset(:,i)>=Stim.F0-.2 & Temps.subset(:,i)<=Stim.F0+.2),i));
+for i = 1:n_expt
+    Results.F0TempResponse(i) = median(CaResponse.subset(find(Temps.subset(:,i)>=Stim.F0-.2 & Temps.subset(:,i)<=Stim.F0+.2),i));
 end
+
+
+
 
 end
 

@@ -23,13 +23,13 @@ function [] = TCI_analyzeEctopic
 %               data for input into this code. TCI_Preprocessing.
 % 2020_10_01    Added quantification of Tmax.
 % 2020_10_18    Added plot of inidividual calcium traces, colors set by
-%               whether trace crosses threshold. 
+%               whether trace crosses threshold.
 % 2020_12_04    Changed how threshold is calculated. Previous: 3*RMS of
 %               control trace, for at least 6 seconds (12 frames). Now:
-%               must exceed the mean of control + 3* std(control) for 
+%               must exceed the mean of control + 3* std(control) for
 %               at least 40 seconds (80 frames, at a rate of 0.025c/S
 %               this equals 1 degreeC). By eye, this looks a lot more
-%               accurate. 
+%               accurate.
 % 2021_01_21    Changed heatmap such that the heamtap rows (individual
 %               traces) are now ordered using average linkage distance.
 %               Also changed the inputs to the heatmap so that the traces
@@ -70,6 +70,52 @@ basefilename = {fullfile(basepathstr, basename)};
 ctrl_n = regexp(basename,'_data','split');
 ctrl_n = ctrl_n{1};
 Ctrl = load(basefilename{1});
+
+
+%% Ask which plots to generate
+global plotlogic
+global plteach
+global pltheat
+global pltshade
+global pltmulti
+global plttvr
+
+plottypes = {'Heatmap', 'Shaded Averages', 'Multiple Lines', 'None', 'Plots Only'};
+[answer, OK] = listdlg('PromptString','Pick plots to generate', ...
+    'ListString', plottypes, 'ListSize', [160 160], ...
+    'InitialValue', [3 5]);
+answer = plottypes(answer);
+if any(contains(answer, 'None'))
+    plotlogic = 0;
+else
+    plotlogic = 1;
+end
+
+if any(contains(answer, 'Plots Only'))
+    analysislogic = 0;
+else
+    analysislogic = 1;
+end
+
+if any(contains(answer, 'Heatmap'))
+    
+    pltheat = 1;
+else
+    pltheat = 0;
+end
+
+if any(contains(answer, 'Shaded Averages'))
+    pltshade = 1;
+else
+    pltshade = 0;
+end
+
+if any(contains(answer, 'Multiple Lines'))
+    pltmulti = 1;
+else
+    pltmulti = 0;
+end
+
 
 %% Calculate Temperature at which point Experimental trace rises above 3*STD of control trace for at least N seconds
 % Ramp rate is 0.025C/s, so the time it would take to increase 1C is 40 seconds, which equals 80 frames.
@@ -145,8 +191,8 @@ disp(strcat('Median Tmax: ',num2str(Tmax_temp)));
 % Align the full and subset traces to identify the timing of the threshold
 % cross
 for i = 1:n_expt
-[~, ia, ~] = intersect(Exp.CaResponse.full(:,i), Exp.CaResponse.subset(:,i), 'stable');
-time_adjustment_index(i) = ia(1) - 1;
+    [~, ia, ~] = intersect(Exp.CaResponse.full(:,i), Exp.CaResponse.subset(:,i), 'stable');
+    time_adjustment_index(i) = ia(1) - 1;
 end
 
 out = median((plot_outt + time_adjustment_index), 'omitnan');
@@ -171,36 +217,45 @@ index_for_plotting = ~isnan(Thresh_tempp);
 disp(('UIDs that did not cross threshold: '));
 Exp.UIDs{~index_for_plotting}
 disp(strcat('number of traces that cross threshold: ',num2str(sum(~isnan(Thresh_tempp))), '/',num2str(n_expt)));
+
+if plotlogic > 0
 % Calculate Mean and SD with non-normalized data
 % Note: by including NaN values, if a trace is missing values b/c it is
 % truncated, the entire average trace will be truncated to match. To
 % change this behavior, switch the nan flag to 'omitnan'
-Ca = mean(Exp.CaResponse.full(:,index_for_plotting),2,'includenan');
-err_Ca = std(Exp.CaResponse.full(:,index_for_plotting),[],2,'includenan');
-avg_Tmp = mean(Exp.Temps.full(:,index_for_plotting),2,'includenan');
-err_Tmp = std(Exp.Temps.full(:,index_for_plotting),[],2,'includenan');
+Ca = mean(Exp.CaResponse.full(:,index_for_plotting),2,'omitnan');
+err_Ca = std(Exp.CaResponse.full(:,index_for_plotting),[],2,'omitnan');
+avg_Tmp = mean(Exp.Temps.full(:,index_for_plotting),2,'omitnan');
+err_Tmp = std(Exp.Temps.full(:,index_for_plotting),[],2,'omitnan');
 
 % Calculate mean/sd for non-normalized baseline data
-Ca_baseline = mean(Ctrl.CaResponse.full,2,'includenan');
-err_Ca_baseline = std(Ctrl.CaResponse.full,[],2,'includenan');
+Ca_baseline = mean(Ctrl.CaResponse.full,2,'omitnan');
+err_Ca_baseline = std(Ctrl.CaResponse.full,[],2,'omitnan');
 
 % Average shaded plot if there are traces above threshold
-if sum(index_for_plotting) > 0
-MakeTheShadedPlot(Ca, avg_Tmp,err_Ca, err_Tmp, Ca_baseline, err_Ca_baseline, n, Tx, out, Thresh_temp);
+if pltshade == 1
+    if sum(index_for_plotting) > 0
+        MakeTheShadedPlot(Ca, avg_Tmp,err_Ca, err_Tmp, Ca_baseline, err_Ca_baseline, n, Tx, out, Thresh_temp);
+    end
 end
 % Plot each response individually, color coding depending on if it crosses
 % threshold
-Temp = mean(Exp.Temps.full,2,'includenan');
-Err = std(Exp.Temps.full,[],2,'includenan');
-MakeTheMultipleLinePlot(Exp.CaResponse.full, Temp,  Err, Ca_baseline, err_Ca_baseline, n, Tx, out, Thresh_temp, Thresh_tempp);
+Temp = mean(Exp.Temps.full,2,'omitnan');
+Err = std(Exp.Temps.full,[],2,'omitnan');
+if pltmulti == 1
+    MakeTheMultipleLinePlot(Exp.CaResponse.full, Temp,  Err, Ca_baseline, err_Ca_baseline, n, Tx, out, Thresh_temp, Thresh_tempp);
+end
 
 % Plot a heatmap, after first normalizing traces to the maximum calcium
 % response amongst all traces.
-if sum(index_for_plotting) > 0
-CaResponse.norm = Exp.CaResponse.subset(:,index_for_plotting)/max(max(Exp.CaResponse.subset(:,index_for_plotting)));
-MakeTheHeatmap(CaResponse.norm'*100, mean(Exp.Temps.subset(:,index_for_plotting),2,'includenan'), std(Exp.Temps.subset(:,index_for_plotting),[],2,'includenan'), n, [-20 100]);
+if pltheat == 1
+    if sum(index_for_plotting) > 0
+        CaResponse.norm = Exp.CaResponse.subset(:,index_for_plotting)/max(max(Exp.CaResponse.subset(:,index_for_plotting)));
+        MakeTheHeatmap(CaResponse.norm'*100, mean(Exp.Temps.subset(:,index_for_plotting),2,'omitnan'), std(Exp.Temps.subset(:,index_for_plotting),[],2,'omitnan'), n, [-20 100]);
+    end
 end
 
+end
 %% Save Data
 Exp_Worm_Strain = regexp(name, Pname, 'split');
 Exp_Worm_Strain = strtrim(Exp_Worm_Strain{1});
@@ -211,30 +266,31 @@ if ~isfield(Exp, "UIDs")
     Exp.UIDs = cell(1, n_expt);
 end
 
-headers={'Strain_ID','Exp.UIDs','Thresh_time','Thresh_temp','Tmax',strcat('ResponseSize_',num2str(Stim.Analysis(1)),'C'),strcat('ResponseSize_',num2str(Stim.Analysis(2)),'C'), strcat('ResponseSize_',num2str(Stim.max),'C')};
-T=table(repmat(string(Exp_Worm_Strain),[n_expt,1]),Exp.UIDs',plot_outt',Thresh_tempp',Tmax.temp',Results.ResponseBin1', Results.ResponseBin2',Results.MaxTempResponse','VariableNames',headers);
-
-writetable(T,fullfile(newdir,strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet', 1);
-
-% Save Metadata
-U = [struct2table(Stim, 'AsArray',1), struct2table(time, 'AsArray',1)];
-U = addvars(U, strcat(string(Exp_Worm_Strain),'/', string(Ctrl_Worm_Strain)), string(Pname), 'Before', 'min', 'NewVariableNames',{'Strains', 'StimulusType'});
-writetable(U, fullfile(newdir, strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet','Metadata');
-
-% Save Processed Experimental Traces
-V = array2table(Exp.CaResponse.full, 'VariableNames',Exp.UIDs);
-writetable(V, fullfile(newdir, strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet','ExpCaResponseTrace');
-
-% Save Processed Control Traces
-cV = array2table(Ctrl.CaResponse.full, 'VariableNames',Ctrl.UIDs);
-writetable(cV, fullfile(newdir, strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet','CtrlCaResponseTrace');
-
-W = array2table(Exp.Temps.full, 'VariableNames',Exp.UIDs);
-writetable(W, fullfile(newdir, strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet','ExpTempTrace');
-
-cW = array2table(Ctrl.Temps.full, 'VariableNames',Ctrl.UIDs);
-writetable(cW, fullfile(newdir, strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet','CtrlTempTrace');
-
+if analysislogic == 1
+    headers={'Strain_ID','Exp.UIDs','Thresh_time','Thresh_temp','Tmax',strcat('ResponseSize_',num2str(Stim.Analysis(1)),'C'),strcat('ResponseSize_',num2str(Stim.Analysis(2)),'C'), strcat('ResponseSize_',num2str(Stim.max),'C')};
+    T=table(repmat(string(Exp_Worm_Strain),[n_expt,1]),Exp.UIDs',plot_outt',Thresh_tempp',Tmax.temp',Results.ResponseBin1', Results.ResponseBin2',Results.MaxTempResponse','VariableNames',headers);
+    
+    writetable(T,fullfile(newdir,strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet', 1);
+    
+    % Save Metadata
+    U = [struct2table(Stim, 'AsArray',1), struct2table(time, 'AsArray',1)];
+    U = addvars(U, strcat(string(Exp_Worm_Strain),'/', string(Ctrl_Worm_Strain)), string(Pname), 'Before', 'min', 'NewVariableNames',{'Strains', 'StimulusType'});
+    writetable(U, fullfile(newdir, strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet','Metadata');
+    
+    % Save Processed Experimental Traces
+    V = array2table(Exp.CaResponse.full, 'VariableNames',Exp.UIDs);
+    writetable(V, fullfile(newdir, strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet','ExpCaResponseTrace');
+    
+    % Save Processed Control Traces
+    cV = array2table(Ctrl.CaResponse.full, 'VariableNames',Ctrl.UIDs);
+    writetable(cV, fullfile(newdir, strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet','CtrlCaResponseTrace');
+    
+    W = array2table(Exp.Temps.full, 'VariableNames',Exp.UIDs);
+    writetable(W, fullfile(newdir, strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet','ExpTempTrace');
+    
+    cW = array2table(Ctrl.Temps.full, 'VariableNames',Ctrl.UIDs);
+    writetable(cW, fullfile(newdir, strcat(Exp_Worm_Strain,'_vs_', Ctrl_Worm_Strain,'_',Pname,'_results.xlsx')), 'Sheet','CtrlTempTrace');
+end
 close all
 disp('Finished!');
 end
@@ -308,22 +364,27 @@ function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, Ca_baseline, err_Ca_
 global newdir
 index_for_plotting = ~isnan(Thresh_tempp);
 C=cbrewer('qual', 'Dark2', 7, 'PCHIP');
-set(groot, 'defaultAxesColorOrder', C); 
+set(groot, 'defaultAxesColorOrder', C);
 fig = figure;
 ax.up = subplot(3,1,[1:2]);
 shadedErrorBar([1:size(Ca_baseline,1)], Ca_baseline, err_Ca_baseline, 'k',0);
+
 hold on;
+xline(out,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+
 if sum(index_for_plotting)>0
-plot([1:size(Ca,1)],Ca(:,index_for_plotting),'-'); %Plot traces that cross threshold 
+    plot([1:size(Ca,1)],Ca(:,index_for_plotting),'-'); %Plot traces that cross threshold
+    plot([1:size(Ca,1)],median(Ca(:,index_for_plotting),2, 'omitnan'),'LineWidth', 2, 'Color', 'k');
 end
+
+
 if sum(~index_for_plotting)>0
-plot([1:size(Ca,1)],Ca(:,~index_for_plotting),'Color', [.5 .5 .5]);
+    plot([1:size(Ca,1)],Ca(:,~index_for_plotting),'Color', [.5 .5 .5]);
 end
-%plot(out,Tx,'bo');
+
 hold off;
 xlim([0, size(Ca,1)]);
-ylim([floor(min(min(Ca))),ceil(max(max(Ca)))]);
-ylim([-20, 210]);
+ylim([-20, 250]);
 
 set(gca,'XTickLabel',[]);
 ylabel('dR/R0 (%)');
@@ -331,10 +392,10 @@ ylabel('dR/R0 (%)');
 ax.dwn = subplot(3,1,3);
 shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'k',0);
 set(gca,'xtickMode', 'auto');
-hold on; plot(out, avg_Thresh_temp, 'bo')
+hold on;
+xline(out,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
 hold off;
-ylim([floor(min(avg_Tmp)-max(err_Tmp)),ceil(max(avg_Tmp)+max(err_Tmp))]);
-ylim([19, 41]);
+ylim([10, 41]);
 xlim([0, size(Ca,1)]);
 ylabel('Temperature (celcius)','Color','k');
 xlabel('Time (seconds)');
@@ -377,10 +438,10 @@ close all
 end
 
 % function [] = MakeTheHeatmap(Ca, avg_Tmp, err_Tmp, n, range)
-% 
+%
 % global newdir
 % global assaytype
-% 
+%
 % figure
 % colormap(viridis);
 % subplot(3,1,[1:2]);
@@ -389,7 +450,7 @@ end
 % xlim([0, round(size(avg_Tmp,1),-1)]);
 % ylabel('Worms');
 % colorbar
-% 
+%
 % subplot(3,1,3);
 % colors = get(gca,'colororder');
 % shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'r',0);
@@ -401,11 +462,11 @@ end
 % xlabel('Time (seconds)');
 % currentFigure = gcf;
 % colorbar
-% 
+%
 % title(currentFigure.Children(end), strcat(n,'_Cameleon Response Heatmap'),'Interpreter','none');
-% 
+%
 % saveas(gcf, fullfile(newdir,['/', n, '-heatmap.eps']),'epsc');
 % saveas(gcf, fullfile(newdir,['/', n, '-heatmap.jpeg']),'jpeg');
-% 
+%
 % close all
 % end

@@ -1,4 +1,4 @@
-function [] = TCI_Plots(Temps, CaResponse, Stim, UIDs, n, numfiles, Results)
+function [] = TCI_Plots(Temps, CaResponse, Stim, UIDs, n, numfiles, Results, time)
 %% TCI_Plots
 %   Generates and saves plots of YC3.6 Thermal Imaging
 %   TCI_Plots(Temps, CaResponse, name, n, numfiles)
@@ -20,6 +20,7 @@ global pltheat
 global pltshade
 global pltmulti
 global plttvr
+global plttmax
 
 %% Plot Individual Traces
 plotflag = 1 ;
@@ -36,10 +37,10 @@ if numfiles > 1
     % Note: by including NaN values, if a trace is missing values b/c it is
     % truncated, the entire average trace will be truncated to match. To
     % change this behavior, switch the nan flag to 'omitnan'
-    avg_Ca = mean(CaResponse.full,2,'includenan');
-    sd_Ca = std(CaResponse.full,[],2,'includenan');
-    avg_Tmp = mean(Temps.full,2,'includenan');
-    sd_Tmp = std(Temps.full,[],2,'includenan');
+    avg_Ca = mean(CaResponse.full,2,'omitnan');
+    sd_Ca = std(CaResponse.full,[],2,'omitnan');
+    avg_Tmp = mean(Temps.full,2,'omitnan');
+    sd_Tmp = std(Temps.full,[],2,'omitnan');
     
     % Average shaded plot
     if pltshade == 1
@@ -48,14 +49,41 @@ if numfiles > 1
     
     % Multiple line plot
     if pltmulti == 1
-        MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n, Results.Tx, Results.out, Results.Thresh_temp);
+        MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n, Results.out);
     end
     
+     % Multiple line plot
+    if plttmax == 1
+        MakeTheMultipleLinePlot(CaResponse.Tmax, ...
+            mean(Temps.Tmax,2,'omitnan'), ...
+            std(Temps.Tmax,[],2,'omitnan'), ...
+            strcat(n, '_TmaxZoom'), find(mean(Temps.Tmax,2,'omitnan') >= Stim.max, 1, 'first'));
+    end
+        
     % Normalize traces to the maximum calcium
     % response amongst all traces.
-    CaResponse.norm = CaResponse.subset/max(max(CaResponse.subset));
-    % Correlation plots and Heatmap with normalized data
+    % Used for % Correlation plots and Heatmap with normalized data
     
+    CaResponse.norm = CaResponse.subset/max(max(CaResponse.subset));
+    
+    if assaytype ~= 2
+        CaResponse.heat = CaResponse.norm;
+        Temps.heat = Temps.subset;
+    else
+        
+        % Align the full and subset traces
+        for i = 1:numfiles
+            [~, ia, ~] = intersect(CaResponse.full(:,i), CaResponse.subset(:,i), 'stable');
+            time_adjustment_index(i) = ia(1) - 1;
+        end
+        CaResponse.heat = arrayfun(@(x)(CaResponse.full(time_adjustment_index(x):time_adjustment_index(x)+time.pad(4), x)), [1:numfiles], 'UniformOutput', false);
+        CaResponse.heat = cell2mat(CaResponse.heat);
+        CaResponse.heat =CaResponse.heat/max(max(CaResponse.heat));
+        
+        Temps.heat = arrayfun(@(x)(Temps.full(time_adjustment_index(x):time_adjustment_index(x)+time.pad(4), x)), [1:numfiles], 'UniformOutput', false);
+        Temps.heat = cell2mat(Temps.heat);
+    end
+ 
     if pltheat == 1
         setaxes = 1;
         while setaxes>0 % loop through the axes selection until you're happy
@@ -72,7 +100,7 @@ if numfiles > 1
                 'Heatmap Parameters', 1, range);
             range = [str2num(answer{1}), str2num(answer{2})];
             
-            MakeTheHeatmap(CaResponse.norm'*100, mean(Temps.subset,2,'includenan'), std(Temps.subset,[],2,'includenan'), n, range);
+            MakeTheHeatmap(CaResponse.heat'*100, mean(Temps.heat,2,'includenan'), std(Temps.heat,[],2,'includenan'), n, range);
             
             answer = questdlg('Adjust Heatmap Params', 'Plot adjustment', 'Yes');
             switch answer
@@ -206,6 +234,10 @@ elseif assaytype ==3
     C=inferno(35-5+1); %Full range of possible temperatures
     TickRange=[1:5:31];
     TickLab={'5','10','15','20','25','30','35'};
+elseif assaytype ==4
+    C=inferno(22-15+1); %Full range of possible temperatures
+    TickRange=[1:2:8];
+    TickLab={'15','17','19','22'};
 end
 colormap((C));
 xx = [1:size(Ca,1)'; 1:size(Ca,1)']';
@@ -239,38 +271,6 @@ ax2.dwn.YLim(2) = ax.dwn.YLim(2);
 currentFigure = gcf;
 title(currentFigure.Children(end), [strcat('Recording', {' '},suffix,string(name))],'Interpreter','none');
 
-% if plotflag>0
-%     % Adjust axis values for the plot
-%     setaxes = 1;
-%     while setaxes>0 % loop through the axes selection until you're happy
-%         answer = questdlg('Adjust X/Y Axes?', 'Axis adjustment', 'Yes','No','No for All','Yes');
-%         switch answer
-%             case 'Yes'
-%                 setaxes=1;
-%                 vals=inputdlg({'X Min','X Max','Y Min Upper', 'Y Max Upper','Y Min Lower', 'Y Max Lower'},...
-%                     'New X/Y Axes',[1 35; 1 35; 1 35;1 35; 1 35;1 35],{num2str(ax.up.XLim(1)) num2str(ax.up.XLim(2))  num2str(ax.up.YLim(1)) num2str(ax.up.YLim(2)) num2str(ax.dwn.YLim(1)) num2str(ax.dwn.YLim(2))});
-%                 if isempty(vals)
-%                     setaxes = -1;
-%                 else
-%                     ax2.up.XLim(1) = str2double(vals{1});
-%                     ax2.up.XLim(2) = str2double(vals{2});
-%                     ax2.dwn.XLim(1) = str2double(vals{1});
-%                     ax2.dwn.XLim(2) = str2double(vals{2});
-%                     ax2.up.YLim(1) = str2double(vals{3});
-%                     ax2.up.YLim(2) = str2double(vals{4});
-%                     ax2.dwn.YLim(1) = str2double(vals{5});
-%                     ax2.dwn.YLim(2) = str2double(vals{6});
-%                 end
-%             case 'No'
-%                 setaxes=-1;
-%             case 'No for All'
-%                 setaxes=-1;
-%                 plotflag = -1;
-%                 set(0,'DefaultFigureVisible','off');
-%                 disp('Remaining plots generated invisibly.');
-%         end
-%     end
-% end
 saveas(gcf, fullfile(newdir,['/', 'rp_',name, '.jpeg']),'jpeg');
 saveas(gcf, fullfile(newdir,['/', 'rp_',name, '.eps']),'epsc');
 close all
@@ -356,7 +356,6 @@ leafOrder = optimalleaforder(tree, D);
 % Reorder Calcium traces to reflect optimal leaf order
 Ca = Ca(leafOrder, :);
 
-
 figure
 colormap(viridis);
 subplot(3,1,[1:2]);
@@ -370,7 +369,7 @@ subplot(3,1,3);
 colors = get(gca,'colororder');
 shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'r',0);
 set(gca,'xtickMode', 'auto');
-ylim([floor(min(avg_Tmp)-max(err_Tmp)),ceil(max(avg_Tmp)+max(err_Tmp))]);
+ylim([10, 41]);
 xlim([0, round(size(avg_Tmp,1),-1)]);
 ylabel('Temperature (celcius)','Color','r');
 xlabel('Time (seconds)');
@@ -390,16 +389,41 @@ global newdir
 global assaytype
 
 fig = figure;
-ax.L = subplot(1,19,1:7);
+ax.L = subplot(1,15,1:5);
+hold on; 
+
 plot(Bin1_Temps, Bin1_CaResponse,'-');
-ylabel('YFP/CFP ratio(%deltaR/R)');xlabel('Temperature (C)');
-ylim([-1 1]);
+% Calculate median calcium response at each unique temperature measurement,
+% then smooth the temperature and calcium responses to reduce periodic
+% trends triggered by outliers, which are likely instances where the specific
+% temperature measurement are only observed in a small number of traces. 
+[V, jj, kk] = unique(Bin1_Temps);
+avg_Ca = accumarray(kk, (1:numel(kk))', [], @(x) median(Bin1_CaResponse(x), 'omitnan'));
+avg_Temp = accumarray(kk, (1:numel(kk))', [], @(x) median(Bin1_Temps(x), 'omitnan'));
+smoothed_Ca = smoothdata(avg_Ca,'movmedian',5);
+smoothed_Temp = smoothdata(avg_Temp, 'movmedian',5);
+plot(smoothed_Temp,smoothed_Ca,'LineWidth', 2, 'Color', 'k');
+hold off
+ylabel('dR/R0 (%)');xlabel('Temperature (C)');
+ylim([-50 50]);
+xlim([20 25]);
 title(labels{1});
 
-ax.R = subplot(1,19,8:19);
+ax.R = subplot(1,15,6:15);
+hold on;
 plot(Bin2_Temps, Bin2_CaResponse,'-');
+
+[V, jj, kk] = unique(Bin2_Temps);
+avg_Ca = accumarray(kk, (1:numel(kk))', [], @(x) median(Bin2_CaResponse(x), 'omitnan'));
+avg_Temp = accumarray(kk, (1:numel(kk))', [], @(x) median(Bin2_Temps(x), 'omitnan'));
+smoothed_Ca = smoothdata(avg_Ca,'movmedian',10);
+smoothed_Temp = smoothdata(avg_Temp, 'movmedian',10);
+plot(smoothed_Temp,smoothed_Ca,'LineWidth', 2, 'Color', 'k');
+hold off
+
 set(gca,'YTickLabel',[]); xlabel('Temperature (C)');
-ylim([-1 1]);
+ylim([-50 400]);
+xlim([25 34]);
 title(labels{2});
 
 if exist('Stim.NearTh')
@@ -449,7 +473,7 @@ saveas(gcf, fullfile(newdir,['/', n, '-Temperature vs CaResponse_lines']),'jpeg'
 close all
 end
 
-function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, n, Tx, out, avg_Thresh_temp)
+function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, n, vertline)
 global newdir
 
 
@@ -460,7 +484,7 @@ ax.up = subplot(3,1,[1:2]);
 
 hold on;
 
-xline(out,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+xline(vertline,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
 plot([1:size(Ca,1)],Ca, 'LineWidth', 1);
 plot([1:size(Ca,1)],median(Ca,2, 'omitnan'),'LineWidth', 2, 'Color', 'k');
 
@@ -476,7 +500,7 @@ ax.dwn = subplot(3,1,3);
 shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'k',0);
 set(gca,'xtickMode', 'auto');
 hold on; 
-xline(out,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+xline(vertline,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
 hold off;
 ylim([floor(min(avg_Tmp)-max(err_Tmp)),ceil(max(avg_Tmp)+max(err_Tmp))]);
 ylim([10, 41]);

@@ -25,7 +25,7 @@ global newdir
 [name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','/Users/astrasb/Box Sync/Lab_Hallem/Astra/Writing/Bryant et al 20xx/Data/Calcium Imaging/','Multiselect','on');
 
 
-%[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','D:\Hallem Lab\Astra\S stercoralis\','Multiselect','on');
+%[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','D:\Hallem Lab\Astra\S stercoralis\pASB52\Reversal','Multiselect','on');
 
 if isequal(name,0)
     error('User canceled analysis session');
@@ -51,11 +51,12 @@ global pltheat
 global pltshade
 global pltmulti
 global plttvr
+global plttmax
 
-plottypes = {'Individual Traces', 'Heatmap', 'Shaded Averages', 'Multiple Lines', 'Temp vs Response','None', 'Only Plots'};
+plottypes = {'Individual Traces', 'Heatmap', 'Shaded Averages', 'Multiple Lines', 'Tmax Zoom','Temp vs Response','None', 'Plots Only'};
 [answer, OK] = listdlg('PromptString','Pick plots to generate', ...
     'ListString', plottypes, 'ListSize', [160 160], ...
-    'InitialValue', [2 4]);
+    'InitialValue', [5]);
 answer = plottypes(answer);
 if any(contains(answer, 'None'))
     plotlogic = 0;
@@ -92,6 +93,12 @@ if any(contains(answer, 'Multiple Lines'))
     pltmulti = 1;
 else
     pltmulti = 0;
+end
+
+if any(contains(answer, 'Tmax Zoom'))
+    plttmax = 1;
+else
+    plttmax = 0;
 end
 
 if any(contains(answer, 'Temp vs Response'))
@@ -136,13 +143,29 @@ if isempty(preprocessed) || preprocessed == 0
     % Import calcium responses and process traces
     for i=1:numfiles
         [~, UIDs{i}, ~] = fileparts(filename{i});
-        [temp.subset(:,1), temp.subset(:,2), temp.full(:,1), temp.full(:,2)]=TCI_LoadTrace(filename{i},tempname, fulltemp,Stim, time);
+        [temp.subset(:,1), temp.subset(:,2),... 
+            temp.full(:,1), temp.full(:,2), ...
+            temp.prestim(:,1), temp.prestim(:,2), ...
+            temp.complete(:,1), temp.complete(:,2)]=TCI_LoadTrace(filename{i},tempname, fulltemp,Stim, time);
         sz.subset = size(temp.subset,1);
         sz.full = size(temp.full,1);
+        sz.prestim = size(temp.prestim, 1);
+        sz.complete = size(temp.complete, 1);
+        
         CaResponse.subset(1:sz.subset,i) = temp.subset(:,1);
         Temps.subset(1:sz.subset,i) = temp.subset(:,2);
+        
         CaResponse.full(1:sz.full,i) = temp.full(:,1);
         Temps.full(1:sz.full,i) = temp.full(:,2);
+        
+        CaResponse.prestim(1:sz.prestim,i) = temp.prestim(:,1);
+        Temps.prestim(1:sz.prestim,i) = temp.prestim(:,2);
+        CaResponse.prestim(Temps.prestim == 0) = NaN;
+        Temps.prestim(Temps.prestim == 0) = NaN;
+        
+        CaResponse.complete(1:sz.complete, i) = temp.complete(:,1);
+        Temps.complete(1:sz.complete, i) = temp.complete(:,2);
+        
         clear temp
     end
     
@@ -169,15 +192,34 @@ end
 
 %% Plot Data
 if plotlogic > 0
-    TCI_Plots(Temps, CaResponse,Stim, UIDs, n, numfiles, Results);
+    TCI_Plots(Temps, CaResponse,Stim, UIDs, n, numfiles, Results, time);
 end
 
 %% Save Data
+nAdaptbins = size(Results.AdaptBins,1);
 if analysislogic == 1
     global assaytype
     if assaytype ~= 2
-        headers={'UIDs','AtTh_Spearmans_R','AboveTh_Spearmans_R','Tstar', 'Maximal_Temp', 'Minimal_Temp', 'ResponseSize_AtThreshold'};
-        T=table(UIDs',Results.Corr.AtTh.R',Results.Corr.AboveTh.R',Results.Thresh.temp',Results.maximalTemp', Results.minimalTemp', Results.Thresh.index','VariableNames',headers);
+        headers={'UIDs','AtTh_Spearmans_R',...
+            'AboveTh_Spearmans_R','AboveTh_Pearsons_R',...
+            'Tstar', 'Maximal_Temp', ...
+            'Minimal_Temp', 'ResponseSize_F0Temp', ...
+            'ResponseSize_PrestimHolding',...
+            'ResponseSize_Tmax',...
+            strcat('ResponseSize_',num2str(Stim.Analysis(1)),'C'),...
+            strcat('ResponseSize_',num2str(Stim.Analysis(2)),'C'),...
+            'TmaxEarly', 'TmaxLate',...
+            'TmaxEarly_Cat', 'TmaxLate_Cat'};
+        T=table(UIDs',Results.Corr.AtTh.R',...
+            Results.Corr.AboveThSpear.R',Results.Corr.AboveThPear.R',...
+            Results.Thresh.temp',Results.maximalTemp',...
+            Results.minimalTemp', Results.F0TempResponse', ...
+            Results.Prestim', Results.MaxTempResponse',...
+            Results.ResponseBin1', ...
+            Results.ResponseBin2', Results.AdaptBins(1,:)',...
+            Results.AdaptBins(2,:)',...
+             Results.TmaxEarly_Cat', Results.TmaxLate_Cat',...
+            'VariableNames',headers);
     elseif assaytype == 2
         headers={'UIDs','BelowTh_Pearsons_R', 'Tstar', 'Minimal_Temp',strcat('ResponseSize_',num2str(Stim.Analysis(1)),'C'),strcat('ResponseSize_',num2str(Stim.Analysis(2)),'C'),'ResponseSize_AtThreshold'};
         T=table(UIDs',Results.Corr.BelowTh.R', Results.Thresh.temp', Results.minimalTemp', Results.ResponseBin1', Results.ResponseBin2',Results.Thresh.index','VariableNames',headers);

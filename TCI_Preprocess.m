@@ -20,7 +20,7 @@ function [] = TCI_Preprocess ()
 warning('off','all'); % Don't display warnings
 
 %% Select .csv file(s) or .mat file containing imaging data
-[name, pathstr] = uigetfile2({'*.csv'},'Select imaging data','D:\Hallem Lab\Astra\C elegans\pFictive Extended\','Multiselect','on');
+[name, pathstr] = uigetfile2({'*.csv'},'Select imaging data','/Users/astrasb/Box Sync/Lab_Hallem/Astra/Writing/Bryant et al 20xx/Data/Calcium Imaging/Ectopic Expression/pFictive Extended','Multiselect','on');
 
 if isequal(name,0)
     error('User canceled analysis session');
