@@ -33,8 +33,8 @@ if assaytype ~= 2
         CaResponse.AboveTh(1:size(find(Temps.subset(:,i)>=Stim.AboveTh(1)),1),i) = CaResponse.subset(find(Temps.subset(:,i)>=Stim.AboveTh(1)),i);
         
         % Temperature bin of near T(max)
-        Temps.Tmax(1:size(find(Temps.full(:,i)>=Stim.max(1)-1),1),i) = Temps.full(find(Temps.full(:,i)>=Stim.max(1)-1),i);
-        CaResponse.Tmax(1:size(find(Temps.full(:,i)>=Stim.max(1)-1),1),i) = CaResponse.full(find(Temps.full(:,i)>=Stim.max(1)-1),i);
+        Temps.Tmax(1:size(find(Temps.full(:,i)>=Stim.max(1)-3),1),i) = Temps.full(find(Temps.full(:,i)>=Stim.max(1)-3),i);
+        CaResponse.Tmax(1:size(find(Temps.full(:,i)>=Stim.max(1)-3),1),i) = CaResponse.full(find(Temps.full(:,i)>=Stim.max(1)-3),i);
         
     end
     
@@ -52,7 +52,8 @@ if assaytype ~= 2
     
 else
     %% Generate data subsets for negative thermotaxis ramps
-    [CaResponse.BelowTh, Temps.BelowTh] = deal(NaN(size(Temps.subset)));
+    [CaResponse.BelowTh, Temps.BelowTh,...
+        CaResponse.Tmin, Temps.Tmin] = deal(NaN(size(Temps.subset)));
     
     for i = 1:size(Temps.subset,2)
         % Temperature bin of descending portion
@@ -61,6 +62,12 @@ else
         trim(i) = find(Temps.BelowTh(:,i)<=(Stim.BelowTh(2)+.2),1,'last');
         Temps.BelowTh(trim(i)+1:end,i)=NaN;
         CaResponse.BelowTh(trim(i)+1:end,i)=NaN;
+        
+        
+         % Temperature bin of near T(max)
+        Temps.Tmin(1:size(find(Temps.full(:,i)<=Stim.min(1)+3),1),i) = Temps.full(find(Temps.full(:,i)<=Stim.min(1)+3),i);
+        CaResponse.Tmin(1:size(find(Temps.full(:,i)<=Stim.min(1)+3),1),i) = CaResponse.full(find(Temps.full(:,i)<=Stim.min(1)+3),i);
+        
     end
     
     
@@ -88,7 +95,7 @@ end
 n_expt = size(CaResponse.subset,2);
 disp(strcat('number of recordings: ',num2str(n_expt)));
 
-N = 0.25/time.rampspeed*2; % required number of consectuive numbers following a first one (with a 500 ms frame rate, this is N/2 seconds)
+N = 0.25/time.rampspeed*2; % required number of consecutive numbers following a first one (with a 500 ms frame rate, this is N/2 seconds)
 
 if assaytype ~= 2
     % RUN THIS FOR EACH INDIVIDUAL EXPERIMENTAL TRACE
@@ -170,6 +177,9 @@ Results.minimalTemp = Temps.subset(I);
 Tmin_temp = median(Results.minimalTemp, 'omitnan');
 disp(strcat('Median Tmin: ',num2str(Tmin_temp)));
 
+%% Determine whether miminal temp is above or below Tc
+Results.Tmin_category = Results.minimalTemp > Stim.F0+1;
+
 %% Calculate average CaResponse at given temperature bins
 for i = 1:n_expt
     Results.ResponseBin1(i) = median(CaResponse.subset(find(Temps.subset(:,i)>=Stim.Analysis(1)-.2 & Temps.subset(:,i)<=Stim.Analysis(1)+.2),i));
@@ -179,7 +189,7 @@ end
 
 %% Calculate average CaResponse at at holding temp during prestimulus period
 for i = 1:n_expt
-    Results.Prestim(i) = median(CaResponse.prestim(find(Temps.prestim(:,i)>=Stim.holding-.2 & Temps.prestim(:,i)<=Stim.holding+.2),i));
+    Results.Holding(i) = median(CaResponse.prestim(find(Temps.prestim(:,i)>=Stim.holding-.2 & Temps.prestim(:,i)<=Stim.holding+.2),i));
 end
 
 
@@ -190,17 +200,23 @@ end
 
 %% Get response during first 15 seconds of Stim.max
 for i = 1:n_expt
-    temp = (CaResponse.full(find(Temps.full(:,i)>=Stim.max-.2, 1,'first'):find(Temps.full(:,i)>=Stim.max-.2, 1,'last'),i));
     if assaytype ~=2
+        temp = (CaResponse.full(find(Temps.full(:,i)>=Stim.max, 1,'first'):find(Temps.full(:,i)>=Stim.max-0.1, 1,'last'),i));
+    
         Results.AdaptBins(1,i) = median(temp(1:15));
         Results.AdaptBins(2,i) = median(temp(31:end));
+    else
+        temp = (CaResponse.full(find(Temps.full(:,i)<=Stim.min, 1,'first'):find(Temps.full(:,i)<=Stim.min+0.1, 1,'last'),i));
+        Results.AdaptBins(1,i) = median(temp(1:15));
+        Results.AdaptBins(2,i) = median(temp(31:end));
+    
     end   
 end
 
-%% Categorize if the various responses
+%% Categorize Tmax responses
         % as greater, lesser, or not different than the holding response
-for i = 1:n_expt
-     if assaytype ~=2
+temp = Results.AdaptBins;
+     if assaytype ~=2 
         if assaytype ~= 4
             % If this is a stimulus where holding response is higher than
             % F0, calculate the threshold from the prestim period
@@ -208,22 +224,53 @@ for i = 1:n_expt
                 base(i)=mean(CaResponse.prestim(find(Temps.prestim(:,i)<=(Stim.holding+.2) & Temps.prestim(:,i) >= (Stim.holding - 0.2)),i));
                 stdbase(i)=std(CaResponse.prestim(find(Temps.prestim(:,i)<=(Stim.holding+.2) & Temps.prestim(:,i) >= (Stim.holding - 0.2)),i));
                 threshold(i) = (3*abs(stdbase(i))); %+ abs(base(i));    
-            end   
-         end   
+            end
+            
+            % Renormalized CaResponse.Tmax and Early/Late tmax quantifications relative to the mean Tc response, aka
+            % the "base" here
+            CaResponse.Tmax_adjusted = CaResponse.Tmax-base;
+            Results.AdaptBins(1,:) = Results.AdaptBins(1,:) - base;
+            Results.AdaptBins(2,:) = Results.AdaptBins(2,:) - base;
+        else   
             % If this is a reversal stimulus, then the holding response is
             % F0 and threshold is as defined above
-            
+            CaResponse.Tmax_adjusted = CaResponse.Tmax;
+        end 
             % Categorize first 15 seconds of Tmax response
-            above = (Results.AdaptBins(1,:) >= threshold);
-            below = (Results.AdaptBins(1,:) <= -threshold)*-1;
+            above = (temp(1,:) >= threshold);
+            below = (temp(1,:) <= -threshold)*-1;
             Results.TmaxEarly_Cat = above + below;
             
             % Categorize late Tmax response
-            above = (Results.AdaptBins(2,:) >= threshold);
-            below = (Results.AdaptBins(2,:) <= -threshold)*-1;
-            Results.TmaxLate_Cat = above + below;        
+            above = (temp(2,:) >= threshold);
+            below = (temp(2,:) <= -threshold)*-1;
+            Results.TmaxLate_Cat = above + below; 
+     else
+         % Stimulus where holding response is higher than
+            % F0, so calculate the threshold from the prestim period
+            for i = 1:size(Temps.prestim,2)
+                base(i)=mean(CaResponse.prestim(find(Temps.prestim(:,i)<=(Stim.holding+.2) & Temps.prestim(:,i) >= (Stim.holding - 0.2)),i));
+                stdbase(i)=std(CaResponse.prestim(find(Temps.prestim(:,i)<=(Stim.holding+.2) & Temps.prestim(:,i) >= (Stim.holding - 0.2)),i));
+                threshold(i) = (3*abs(stdbase(i))); %+ abs(base(i));    
+            end
+            
+            % Renormalized CaResponse.Tmax and Early/Late tmax quantifications relative to the mean Tc response, aka
+            % the "base" here
+            CaResponse.Tmin_adjusted = CaResponse.Tmin-base;
+            Results.AdaptBins(1,:) = Results.AdaptBins(1,:) - base;
+            Results.AdaptBins(2,:) = Results.AdaptBins(2,:) - base;
+            
+            % Categorize first 15 seconds of Tmax response
+            above = (temp(1,:) >= threshold);
+            below = (temp(1,:) <= -threshold)*-1;
+            Results.TminEarly_Cat = above + below;
+            
+            % Categorize late Tmax response
+            above = (temp(2,:) >= threshold);
+            below = (temp(2,:) <= -threshold)*-1;
+            Results.TminLate_Cat = above + below;
     end   
-end
+
 
 %% Calculate average CaResponse at F0 temperature
 for i = 1:n_expt

@@ -17,10 +17,9 @@ global plotflag
 global assaytype
 global plteach
 global pltheat
-global pltshade
 global pltmulti
 global plttvr
-global plttmax
+global pltadapt
 
 %% Plot Individual Traces
 plotflag = 1 ;
@@ -42,22 +41,25 @@ if numfiles > 1
     avg_Tmp = mean(Temps.full,2,'omitnan');
     sd_Tmp = std(Temps.full,[],2,'omitnan');
     
-    % Average shaded plot
-    if pltshade == 1
-        MakeTheShadedPlot(avg_Ca, avg_Tmp, sd_Ca, sd_Tmp,  n, Results.Tx, Results.out, Results.Thresh_temp);
-    end
-    
     % Multiple line plot
     if pltmulti == 1
         MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n, Results.out);
     end
     
-     % Multiple line plot
-    if plttmax == 1
-        MakeTheMultipleLinePlot(CaResponse.Tmax, ...
+     % Adaptation line plot zoomed on 
+     % This data needs to be normalized correctly
+    if pltadapt == 1
+        if assaytype ~= 2
+        MakeTheMultipleLinePlot(CaResponse.Tmax_adjusted, ...
             mean(Temps.Tmax,2,'omitnan'), ...
             std(Temps.Tmax,[],2,'omitnan'), ...
-            strcat(n, '_TmaxZoom'), find(mean(Temps.Tmax,2,'omitnan') >= Stim.max, 1, 'first'));
+            strcat(n, '_TmaxZoom'), find(mean(Temps.Tmax,2,'omitnan') >= Stim.max-0.1, 1, 'first'));
+        else
+            MakeTheMultipleLinePlot(CaResponse.Tmin_adjusted, ...
+            mean(Temps.Tmin,2,'omitnan'), ...
+            std(Temps.Tmin,[],2,'omitnan'), ...
+            strcat(n, '_TminZoom'), find(mean(Temps.Tmin,2,'omitnan') <= Stim.min+0.1, 1, 'first'));
+        end
     end
         
     % Normalize traces to the maximum calcium
@@ -100,7 +102,7 @@ if numfiles > 1
                 'Heatmap Parameters', 1, range);
             range = [str2num(answer{1}), str2num(answer{2})];
             
-            MakeTheHeatmap(CaResponse.heat'*100, mean(Temps.heat,2,'includenan'), std(Temps.heat,[],2,'includenan'), n, range);
+            MakeTheHeatmap(CaResponse.heat'*100, mean(Temps.heat,2,'omitnan'), std(Temps.heat,[],2,'omitnan'), n, range);
             
             answer = questdlg('Adjust Heatmap Params', 'Plot adjustment', 'Yes');
             switch answer
@@ -217,128 +219,6 @@ end
 saveas(gcf, fullfile(newdir,['/',name, '.eps']),'epsc');
 saveas(gcf, fullfile(newdir,['/',name, '.jpeg']),'jpeg');
 
-
-%% Draw a figure where the calcium trace color corresponds to the temperature
-fig2 = figure;
-%movegui('northeast');
-
-if assaytype == 1
-    C=inferno(45-15+1); %Full range of possible temperatures
-    TickRange=[1:5:31];
-    TickLab={'15','20','25','30','35','40','45'};
-elseif assaytype ==2
-    C=parula(25-10+1);
-    TickRange=[1:5:16];
-    TickLab={'10','15','20','25'};
-elseif assaytype ==3
-    C=inferno(35-5+1); %Full range of possible temperatures
-    TickRange=[1:5:31];
-    TickLab={'5','10','15','20','25','30','35'};
-elseif assaytype ==4
-    C=inferno(22-15+1); %Full range of possible temperatures
-    TickRange=[1:2:8];
-    TickLab={'15','17','19','22'};
-end
-colormap((C));
-xx = [1:size(Ca,1)'; 1:size(Ca,1)']';
-yy = [Ca, Ca];
-zz = zeros (size(xx));
-cc = [round((T)-15),round((T))-15];
-
-ax2.up = subplot(4,1,1:3);
-hs = surf(xx,yy,zz,cc,'EdgeColor','interp','FaceColor','none','CDataMapping','direct','LineWidth',2);
-view(2);
-grid off
-ylabel('dR/R0 (%)');
-colorbar('Ticks',TickRange,'TickLabels',TickLab);
-
-ax2.dwn = subplot(4,1,4);
-plot(T);
-xlim([0, round(size(Ca,1),-1)]);
-ylabel('Temperature (celcius)');
-xlabel('Time (seconds)');
-colorbar
-
-ax2.up.XLim(1) = ax.up.XLim(1);
-ax2.up.XLim(2) = ax.up.XLim(2);
-ax2.dwn.XLim(1) = ax.dwn.XLim(1);
-ax2.dwn.XLim(2) = ax.dwn.XLim(2);
-ax2.up.YLim(1) = ax.up.YLim(1);
-ax2.up.YLim(2) = ax.up.YLim(2);
-ax2.dwn.YLim(1) = ax.dwn.YLim(1);
-ax2.dwn.YLim(2) = ax.dwn.YLim(2);
-
-currentFigure = gcf;
-title(currentFigure.Children(end), [strcat('Recording', {' '},suffix,string(name))],'Interpreter','none');
-
-saveas(gcf, fullfile(newdir,['/', 'rp_',name, '.jpeg']),'jpeg');
-saveas(gcf, fullfile(newdir,['/', 'rp_',name, '.eps']),'epsc');
-close all
-end
-
-function []= MakeTheShadedPlot(Ca, avg_Tmp, err_Ca, err_Tmp, n, Tx, out, Thresh_temp)
-global newdir
-
-fig = figure;
-ax.up = subplot(3,1,[1:2]);
-shadedErrorBar([1:size(Ca,1)],Ca,err_Ca,'k',0);
-hold on;
-plot(out,Tx,'bo');
-hold off;
-
-xlim([0, size(Ca,1)]);
-ylim([floor(min(Ca)-max(err_Ca)),ceil(max(Ca)+max(err_Ca))]);
-
-set(gca,'XTickLabel',[]);
-ylabel('dR/R0 (%)');
-
-ax.dwn = subplot(3,1,3);
-shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'k',0);
-set(gca,'xtickMode', 'auto');
-ylim([floor(min(avg_Tmp)-max(err_Tmp)),ceil(max(avg_Tmp)+max(err_Tmp))]);
-
-hold on; plot(out, Thresh_temp, 'bo')
-hold off;
-
-xlim([0, size(Ca,1)]);
-ylabel('Temperature (celcius)','Color','k');
-xlabel('Time (seconds)');
-currentFigure = gcf;
-
-title(currentFigure.Children(end), strcat(n,'_Averaged Cameleon Response'),'Interpreter','none');
-
-movegui('northeast');
-setaxes = 1;
-while setaxes>0 % loop through the axes selection until you're happy
-    answer = questdlg('Adjust X/Y Axes?', 'Axis adjustment', 'Yes');
-    switch answer
-        case 'Yes'
-            setaxes=1;
-            vals=inputdlg({'X Min','X Max','Y Min Upper', 'Y Max Upper','Y Min Lower', 'Y Max Lower'},...
-                'New X/Y Axes',[1 35; 1 35; 1 35;1 35; 1 35;1 35],{num2str(ax.up.XLim(1)) num2str(ax.up.XLim(2))  num2str(ax.up.YLim(1)) num2str(ax.up.YLim(2)) num2str(ax.dwn.YLim(1)) num2str(ax.dwn.YLim(2))});
-            if isempty(vals)
-                setaxes = -1;
-            else
-                ax.up.XLim(1) = str2double(vals{1});
-                ax.up.XLim(2) = str2double(vals{2});
-                ax.dwn.XLim(1) = str2double(vals{1});
-                ax.dwn.XLim(2) = str2double(vals{2});
-                ax.up.YLim(1) = str2double(vals{3});
-                ax.up.YLim(2) = str2double(vals{4});
-                ax.dwn.YLim(1) = str2double(vals{5});
-                ax.dwn.YLim(2) = str2double(vals{6});
-            end
-        case 'No'
-            setaxes=-1;
-        case 'Cancel'
-            setaxes=-1;
-    end
-end
-
-saveas(gcf, fullfile(newdir,['/', n, '-mean_sd.jpeg']),'jpeg');
-saveas(gcf, fullfile(newdir,['/', n, '-mean_sd.eps']),'epsc');
-
-close all
 end
 
 function [] = MakeTheHeatmap(Ca, avg_Tmp, err_Tmp, n, range)
@@ -509,7 +389,7 @@ ylabel('Temperature (celcius)','Color','k');
 xlabel('Time (seconds)');
 currentFigure = gcf;
 
-title(currentFigure.Children(end), strcat(n,'_Individual Cameleon Response'),'Interpreter','none');
+title(currentFigure.Children(end), strcat(n,'_Avg Cameleon Response'),'Interpreter','none');
 
 movegui('northeast');
 setaxes = 1;

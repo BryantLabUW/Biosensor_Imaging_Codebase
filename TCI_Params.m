@@ -37,9 +37,9 @@ switch answer
         Stim.AboveTh = [25];
         Stim.Analysis = [23; 33]; % Pick two temperatures to quantify mean calcium response at.
         time.soak = 60; % duration (sec) of soak time at coolest point in thermal stimulus; indicates amount of time to wait before gathering data for export
-        time.stimdur = 350; % duration of stimulus upwards ramp
+        time.stimdur = 280; % duration of stimulus upwards ramp
         time.rampspeed = 0.1; % rate of temperature change during primary phase, in degrees per second
-        time.pad = [0;0 ; 120; 500]; % start/end times of standardized "full" range for export
+        time.pad = [0; 0 ; 120; 500]; % start/end times of standardized "full" range for export
         Pname = 'Pos Ramp 4';
         
 %     case 2 % 'Pos Ramp 5 (23->17->25->23)';
@@ -81,7 +81,7 @@ case 2 % Neg Ramp 2
         time.soak = 120; % duration (sec) of soak time at coolest point in thermal stimulus; indicates amount of time to wait before gathering data for export
         time.stimdur = 640; % duration (in sec) from start of F0 to end of upwards ramp
         time.rampspeed = 0.025; % rate of temperature change during primary phase, in degrees per second
-        time.pad = [120; 0 ; 120; 760]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
+        time.pad = [60; 0 ; 120; 760]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
         Pname = 'pF PT';
         
     
@@ -98,7 +98,7 @@ case 2 % Neg Ramp 2
         time.soak = 120; % duration (sec) of soak time at coolest point in thermal stimulus; indicates amount of time to wait before gathering data for export
         time.stimdur = 640; % duration (in sec) from start of F0 to end of upwards ramp
         time.rampspeed = 0.025; % rate of temperature change during primary phase, in degrees per second
-        time.pad = [120; 0 ; 120; 760]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
+        time.pad = [60; 0 ; 120; 760]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
         Pname = 'pF PT15';
         
         case 5 % pFictive Extended Ramp
@@ -113,7 +113,7 @@ case 2 % Neg Ramp 2
         time.soak = 120; % duration (sec) of soak time at coolest point in thermal stimulus; indicates amount of time to wait before gathering data for export
         time.stimdur = 880; % duration (in sec) from start of F0 to end of upwards ramp
         time.rampspeed = 0.025; % rate of temperature change during primary phase, in degrees per second
-        time.pad = [120; 0 ; 120; 1060]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
+        time.pad = [60; 0 ; 120; 1060]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
         Pname = 'pF PT extended';
         
          case 6 % pFictive15 Extended
@@ -128,10 +128,10 @@ case 2 % Neg Ramp 2
         time.soak = 120; % duration (sec) of soak time at coolest point in thermal stimulus; indicates amount of time to wait before gathering data for export
         time.stimdur = 880; % duration (in sec) from start of F0 to end of upwards ramp
         time.rampspeed = 0.025; % rate of temperature change during primary phase, in degrees per second
-        time.pad = [120; 0 ; 120; 1060]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
+        time.pad = [60; 0 ; 120; 1060]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
         Pname = 'pF pT15 extended';
         
-        case 7 % Reveral Ramp Tc = 15
+        case 7 % Reversal Ramp Tc = 15
         assaytype = 4; % Pseudo-fictive Positive Thermotaxis
         Stim.min = 15;
         Stim.max = 22;

@@ -46,15 +46,15 @@ for i = 1:size(Temps,2)
         Correlation.P(i) = Pval;
     end
     % Plotting
-    subplot(size(Temps,2),1,i);
-    plot(Temps(index,i), CaResponse(index,i),'.',Temps(index,i),yfit,'-');
+%     subplot(size(Temps,2),1,i);
+%     plot(Temps(index,i), CaResponse(index,i),'.',Temps(index,i),yfit,'-');
     
 end
-currentFigure = gcf;
-title(currentFigure.Children(end), strcat(name,' Linear Fit'),'Interpreter','none');
-
-if plotlogic > 0
-    saveas(gcf, fullfile(newdir,['/', name, 'linear_fits.jpeg']),'jpeg');
-end
+% currentFigure = gcf;
+% title(currentFigure.Children(end), strcat(name,' Linear Fit'),'Interpreter','none');
+% 
+% if plotlogic > 0
+%     saveas(gcf, fullfile(newdir,['/', name, 'linear_fits.jpeg']),'jpeg');
+% end
 close all
 end
