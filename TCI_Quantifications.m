@@ -43,12 +43,12 @@ if assaytype ~= 2
     % Spearman's or Pearson's correlation using the 3rd input variable.
     % 1 = Pearson's correlation, for quantifying linear correlation
     % 2 = Spearman's correlation, for quantifying monotonic correlations
-    set(0,'DefaultFigureVisible','off');
-    [Results.rsq.AtTh, Results.Corr.AtTh] = TCI_ResponseFitting(Temps.AtTh, CaResponse.AtTh,2,strcat(n,'_AtTh_'));
-    [Results.rsq.AboveThPear, Results.Corr.AboveThPear] = TCI_ResponseFitting(Temps.AboveTh, CaResponse.AboveTh,1,strcat(n,'_AboveThPear_'));
-    [Results.rsq.AboveThSpear, Results.Corr.AboveThSpear] = TCI_ResponseFitting(Temps.AboveTh, CaResponse.AboveTh,2,strcat(n,'_AboveThSpear_'));
     
-    set(0,'DefaultFigureVisible','on');
+    [Results.rsq.AtTh, Results.Corr.AtTh] = TCI_ResponseFitting(Temps.AtTh, CaResponse.AtTh,2);
+    [Results.rsq.AboveThPear, Results.Corr.AboveThPear] = TCI_ResponseFitting(Temps.AboveTh, CaResponse.AboveTh,1);
+    [Results.rsq.AboveThSpear, Results.Corr.AboveThSpear] = TCI_ResponseFitting(Temps.AboveTh, CaResponse.AboveTh,2);
+    [~, Results.Corr_Instant] = TCI_ResponseFitting(Temps.subset, CaResponse.subset, 3, Stim);
+    
     
 else
     %% Generate data subsets for negative thermotaxis ramps

@@ -123,6 +123,7 @@ if numfiles > 1
     if assaytype == 1
         if plttvr == 1
             MakeTheTempVResponsePlot(Temps.AtTh, CaResponse.AtTh, Temps.AboveTh, CaResponse.AboveTh, n, Stim,{'AtTh';'AboveTh'});
+            MakeTheInstantCorrelationPlot(Results.Corr_Instant.R_ibins, Results.Corr_Instant.R_instant, n, Stim,{'Instant Correlation'});
         end
         
     elseif assaytype == 2
@@ -353,6 +354,38 @@ saveas(gcf, fullfile(newdir,['/', n, '-Temperature vs CaResponse_lines']),'jpeg'
 close all
 end
 
+function [] = MakeTheInstantCorrelationPlot(Temps, Correlation, n, Stim,labels)
+global newdir
+global assaytype
+
+fig = figure;
+hold on; 
+
+plot(Temps, Correlation,'-');
+% Calculate median correlation response at each unique temperature bin,
+% then smooth the temperature and calcium responses to reduce periodic
+% trends triggered by outliers, which are likely instances where the specific
+% temperature measurement are only observed in a small number of traces. 
+[V, jj, kk] = unique(Temps);
+avg_Corr = accumarray(kk, (1:numel(kk))', [], @(x) median(Correlation(x), 'omitnan'));
+avg_Temp = accumarray(kk, (1:numel(kk))', [], @(x) median(Temps(x), 'omitnan'));
+% smoothed_Corr = smoothdata(avg_Corr,'movmedian',5);
+% smoothed_Temp = smoothdata(avg_Temp, 'movmedian',5);
+% plot(smoothed_Temp,smoothed_Corr,'LineWidth', 2, 'Color', 'k');
+plot(avg_Temp,avg_Corr,'LineWidth', 2, 'Color', 'k');
+hold off
+ylabel('Correlation R');xlabel('Temperature (C)');
+ylim([-1.2 1.2]);
+xlim([20 34]);
+title(labels);
+
+saveas(gcf, fullfile(newdir,['/', n, '-InstantCorr_lines']),'epsc');
+saveas(gcf, fullfile(newdir,['/', n, '-InstantCorr_lines']),'jpeg');
+
+close all
+end
+
+
 function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, n, vertline)
 global newdir
 
@@ -424,4 +457,5 @@ saveas(gcf, fullfile(newdir,['/', n, '-multiplot.eps']),'epsc');
 
 close all
 end
+
 

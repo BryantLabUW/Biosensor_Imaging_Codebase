@@ -1,4 +1,4 @@
-function [rsq, Correlation] = TCI_ResponseFitting (Temps,CaResponse, degree,name)
+function [rsq, Correlation] = TCI_ResponseFitting (Temps,CaResponse, degree, Stim)
 %%  TCI_ThermalResponseFitting
 %   Linear fitting and correlation analysis of a set of temperature-driven calcium responses
 %   Input is a structure array with fields named Temps and CaResponse
@@ -13,10 +13,8 @@ function [rsq, Correlation] = TCI_ResponseFitting (Temps,CaResponse, degree,name
 %
 
 %% Code
-global newdir
-global plotlogic
 
-figure;
+% Calculate correlation across large time windows
 for i = 1:size(Temps,2)
     % Indexing
     index = ~isnan(Temps(:,i));
@@ -45,16 +43,27 @@ for i = 1:size(Temps,2)
         Correlation.R(i) = Rho;
         Correlation.P(i) = Pval;
     end
-    % Plotting
-%     subplot(size(Temps,2),1,i);
-%     plot(Temps(index,i), CaResponse(index,i),'.',Temps(index,i),yfit,'-');
-    
+
 end
-% currentFigure = gcf;
-% title(currentFigure.Children(end), strcat(name,' Linear Fit'),'Interpreter','none');
-% 
-% if plotlogic > 0
-%     saveas(gcf, fullfile(newdir,['/', name, 'linear_fits.jpeg']),'jpeg');
-% end
-close all
+
+
+% Calculate "instantaenous" correlation across 0.1C windows
+%Subset the trace into 1 degree temperature bins?
+if degree == 3
+    rsq = [];
+edges = [Stim.NearTh(1):2:Stim.max];
+
+for i = 1:size(Temps,2)
+    index = ~isnan(Temps(:,i));
+    
+    bins = discretize(Temps(index,i), edges);
+    for ii = min(bins):max(bins)
+        timeindex = find(bins == ii);
+        responseindexed = CaResponse(timeindex, i);
+        [rho, ~] = corr(timeindex, responseindexed);
+        Correlation.R_instant(ii,i) = rho;
+    end
+    Correlation.R_ibins(:,i) = edges(2:end);
+end
+end
 end
