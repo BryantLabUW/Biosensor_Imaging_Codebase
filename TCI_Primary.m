@@ -1,16 +1,9 @@
 function [Temps, CaResponse] = TCI_Primary ()
-%% TCI_Primary processes YC3.6 calcium responses to a variety of thermotaxis ramps
+%% TCI_Primary processes AFD YC3.6 calcium responses to a variety of thermosensory stimuli
 %   [] = TCI_Primary()
+%   This is the top-level script for analysis of S. stercoralis and C.
+%   elegans AFD temperature-driven calcium responses. 
 %
-%
-%% Revision History
-%   4-1-20:     Adapted from an older version of the code by ASB
-%   4-2-20:     Added ability to process negative ramps (ASB)
-%   4-25-20:    Increased output saved in xlsx file to include metadata and
-%                   full traces, to improve downstream import into RStudio.
-%   2020-09-10  Results are no longer saved in the .mat file.\
-%   2021-02-17  Made updates to analysis and plotting, also put all
-%               associated files on GitHub so this revision history is now defunct
 
 clear all
 close all
@@ -23,9 +16,6 @@ global newdir
 
 
 [name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','/Users/astrasb/Box Sync/Lab_Hallem/Astra/Writing/Bryant et al 20xx/Data/Calcium Imaging/','Multiselect','on');
-
-
-%[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','D:\Hallem Lab\Astra\S stercoralis\pASB52\Reversal','Multiselect','on');
 
 if isequal(name,0)
     error('User canceled analysis session');

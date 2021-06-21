@@ -1,12 +1,14 @@
 function [] = TCI_analyzeEctopic
 %% TCI_analyzeEctopic analyzes and plots Ss-AFD-rGC ectopic expression data, compared to a WT control
-%   [] = analyzeEctopic()
-%   Calculates thermal threshold in terms of deviation from a baseline.
-%   Plots average responses and generates heatmaps.
-%   Applied to ecotpic expression experiments.
+%   [] = TCI_analyzeEctopic()
+%   
+%   To analyze data using this script, users should first preprocess
+%   experimental and control data using the TCI_Preprocess script. 
 %
-%   Version number: 2.0.0
-%   Version date: 2020_12_04
+%   This code:
+%       calculates thermal threshold in terms of deviation from a baseline.
+%       plots average responses and generates heatmaps.
+%  
 
 %% Revision History
 %
@@ -437,36 +439,3 @@ saveas(gcf, fullfile(newdir,['/', n, '-multiplot.eps']),'epsc');
 close all
 end
 
-% function [] = MakeTheHeatmap(Ca, avg_Tmp, err_Tmp, n, range)
-%
-% global newdir
-% global assaytype
-%
-% figure
-% colormap(viridis);
-% subplot(3,1,[1:2]);
-% imagesc(Ca,range);
-% set(gca,'XTickLabel',[]);
-% xlim([0, round(size(avg_Tmp,1),-1)]);
-% ylabel('Worms');
-% colorbar
-%
-% subplot(3,1,3);
-% colors = get(gca,'colororder');
-% shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'r',0);
-% set(gca,'xtickMode', 'auto');
-% ylim([floor(min(avg_Tmp)-max(err_Tmp)),ceil(max(avg_Tmp)+max(err_Tmp))]);
-% ylim([19, 40]);
-% xlim([0, round(size(avg_Tmp,1),-1)]);
-% ylabel('Temperature (celcius)','Color','r');
-% xlabel('Time (seconds)');
-% currentFigure = gcf;
-% colorbar
-%
-% title(currentFigure.Children(end), strcat(n,'_Cameleon Response Heatmap'),'Interpreter','none');
-%
-% saveas(gcf, fullfile(newdir,['/', n, '-heatmap.eps']),'epsc');
-% saveas(gcf, fullfile(newdir,['/', n, '-heatmap.jpeg']),'jpeg');
-%
-% close all
-% end
