@@ -163,6 +163,17 @@ end
 
 Results.out = median((plot_outt + time_adjustment_index), 'omitnan');
 
+%% Calculate maximum absolute deviation, and sum of absolute deviation from baseline during rising temperature ramp
+% Calculate on smoothed data, where smoothing is a moving median value of 3
+% measurements
+smoothed_data = smoothdata(CaResponse.subset,1, 'movmedian', 3);
+for i = 1:size(Temps.subset,2)
+    smoothed_data_sub = smoothed_data(find(Temps.subset(:,i)<=Stim.Analysis(2) & Temps.subset(:,i) >= Stim.Analysis(1)),i);
+    Results.max_absdev(i) = max(abs(smoothed_data_sub));
+    Results.sum_absdev(i) = sum(abs(smoothed_data_sub));
+end
+      
+
 %% Calculate temperature that elicits maximal response
 [m, I] = max(CaResponse.subset,[],1,'linear');
 Results.maximalTemp = Temps.subset(I);

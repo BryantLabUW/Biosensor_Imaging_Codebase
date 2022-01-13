@@ -13,6 +13,7 @@ warning('off','all'); % Don't display warnings
 global pathstr
 global preprocessed
 global newdir
+global assaytype
 
 
 [name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','/Users/astrasb/Box Sync/Lab_Hallem/Astra/Writing/Bryant et al 20xx/Data/Calcium Imaging/','Multiselect','on');
@@ -30,9 +31,6 @@ else
     filename = fullfile(pathstr, name);
     analysislogic = 1;
 end
-
-%% Gather Stimulus Protocol Specific Parameters
-[Stim, time, Pname] = TCI_Params ();
 
 %% Ask which plots to generate
 global plotlogic
@@ -105,6 +103,16 @@ end
 if ~exist('Pname')
     [Stim, time, Pname] = TCI_Params ();
 end
+%% Confirm Analysis and Missing Params
+answer = inputdlg({'Analysis Temp 1', 'Analysis Temp 2'},'Confirm Analysis Temperatures',...
+    [1 30], {num2str(Stim.Analysis(1)), num2str(Stim.Analysis(2))});
+Stim.Analysis = [str2num(answer{1});str2num(answer{2})];
+
+if isempty(assaytype)
+answer = inputdlg({'Input assaytype (1 = Pos; 2 = Neg; 3 = Tc@15C; 4 = Reversal)'},'Assay type missing',...
+    [1 80], {num2str(assaytype)});
+assaytype = str2num(answer{1});
+end
 
 %% Load and Process Data in .csv file format
 if isempty(preprocessed) || preprocessed == 0
@@ -171,7 +179,7 @@ end
 
 %% Save Batch Data
 if numfiles >1
-    save (fullfile(pathstr,strcat(n,'_data.mat')),'CaResponse', 'Temps','UIDs','Stim','time','Pname');
+    save (fullfile(pathstr,strcat(n,'_data.mat')),'CaResponse', 'Temps','UIDs','Stim','time','Pname', 'assaytype');
 end
 
 %% Plot Data
@@ -190,7 +198,8 @@ if analysislogic == 1
             strcat('ResponseSize_',num2str(Stim.Analysis(1)),'C'),...
             strcat('ResponseSize_',num2str(Stim.Analysis(2)),'C'),...
             'TmaxEarly', 'TmaxLate',...
-            'TmaxEarly_Cat', 'TmaxLate_Cat'};
+            'TmaxEarly_Cat', 'TmaxLate_Cat',...
+            'Max_AbsDeviation', 'Sum_AbsDeviation'};
         T=table(UIDs', Results.Thresh.temp',Results.maximalTemp',...
             Results.minimalTemp', double(Results.Tmin_category)', ...
             Results.Corr.AboveThPear.R', Results.Corr.AtTh.R', ...
@@ -198,6 +207,7 @@ if analysislogic == 1
             Results.ResponseBin2', Results.AdaptBins(1,:)',...
             Results.AdaptBins(2,:)',...
              Results.TmaxEarly_Cat', Results.TmaxLate_Cat',...
+             Results.max_absdev', Results.sum_absdev',...
             'VariableNames',headers);
     elseif assaytype == 2
         headers={'UIDs','BelowTh_Pearsons_R', 'Tstar', ...

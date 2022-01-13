@@ -39,5 +39,5 @@ title(currentFigure.Children(end), strcat(n,'_Cameleon Response Heatmap'),'Inter
 saveas(gcf, fullfile(newdir,['/', n, '-heatmap.eps']),'epsc');
 saveas(gcf, fullfile(newdir,['/', n, '-heatmap.jpeg']),'jpeg');
 
-close all
+%close all
 end
