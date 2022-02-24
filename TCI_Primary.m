@@ -1,9 +1,16 @@
 function [Temps, CaResponse] = TCI_Primary ()
-%% TCI_Primary processes AFD YC3.6 calcium responses to a variety of thermosensory stimuli
+%% TCI_Primary processes YC3.6 calcium responses to a variety of thermotaxis ramps
 %   [] = TCI_Primary()
-%   This is the top-level script for analysis of S. stercoralis and C.
-%   elegans AFD temperature-driven calcium responses. 
 %
+%
+%% Revision History
+%   4-1-20:     Adapted from an older version of the code by ASB
+%   4-2-20:     Added ability to process negative ramps (ASB)
+%   4-25-20:    Increased output saved in xlsx file to include metadata and
+%                   full traces, to improve downstream import into RStudio.
+%   2020-09-10  Results are no longer saved in the .mat file.\
+%   2021-02-17  Made updates to analysis and plotting, also put all
+%               associated files on GitHub so this revision history is now defunct
 
 clear all
 close all
@@ -13,10 +20,12 @@ warning('off','all'); % Don't display warnings
 global pathstr
 global preprocessed
 global newdir
-global assaytype
 
 
-[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','/Users/astrasb/Box Sync/Lab_Hallem/Astra/Writing/Bryant et al 20xx/Data/Calcium Imaging/','Multiselect','on');
+[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','D:\Hallem Lab\Astra\C elegans\pFictive Extended\PS5858','Multiselect','on');
+
+
+%[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','D:\Hallem Lab\Astra\S stercoralis\pASB52\Reversal','Multiselect','on');
 
 if isequal(name,0)
     error('User canceled analysis session');
@@ -32,6 +41,9 @@ else
     analysislogic = 1;
 end
 
+%% Gather Stimulus Protocol Specific Parameters
+[Stim, time, Pname] = TCI_Params ();
+
 %% Ask which plots to generate
 global plotlogic
 global plteach
@@ -43,7 +55,7 @@ global pltadapt
 plottypes = {'Individual Traces', 'Heatmap', 'Multiple Lines', 'Steady State','Temp vs Response','None', 'Plots Only'};
 [answer, OK] = listdlg('PromptString','Pick plots to generate', ...
     'ListString', plottypes, 'ListSize', [160 160], ...
-    'InitialValue', [5]);
+    'InitialValue', [1 7]);
 answer = plottypes(answer);
 if any(contains(answer, 'None'))
     plotlogic = 0;
@@ -102,16 +114,6 @@ end
 %% Check if for Stimulus Protocol Parameters, load if necessary
 if ~exist('Pname')
     [Stim, time, Pname] = TCI_Params ();
-end
-%% Confirm Analysis and Missing Params
-answer = inputdlg({'Analysis Temp 1', 'Analysis Temp 2'},'Confirm Analysis Temperatures',...
-    [1 30], {num2str(Stim.Analysis(1)), num2str(Stim.Analysis(2))});
-Stim.Analysis = [str2num(answer{1});str2num(answer{2})];
-
-if isempty(assaytype)
-answer = inputdlg({'Input assaytype (1 = Pos; 2 = Neg; 3 = Tc@15C; 4 = Reversal)'},'Assay type missing',...
-    [1 80], {num2str(assaytype)});
-assaytype = str2num(answer{1});
 end
 
 %% Load and Process Data in .csv file format
@@ -179,7 +181,7 @@ end
 
 %% Save Batch Data
 if numfiles >1
-    save (fullfile(pathstr,strcat(n,'_data.mat')),'CaResponse', 'Temps','UIDs','Stim','time','Pname', 'assaytype');
+    save (fullfile(pathstr,strcat(n,'_data.mat')),'CaResponse', 'Temps','UIDs','Stim','time','Pname');
 end
 
 %% Plot Data
@@ -198,8 +200,7 @@ if analysislogic == 1
             strcat('ResponseSize_',num2str(Stim.Analysis(1)),'C'),...
             strcat('ResponseSize_',num2str(Stim.Analysis(2)),'C'),...
             'TmaxEarly', 'TmaxLate',...
-            'TmaxEarly_Cat', 'TmaxLate_Cat',...
-            'Max_AbsDeviation', 'Sum_AbsDeviation'};
+            'TmaxEarly_Cat', 'TmaxLate_Cat'};
         T=table(UIDs', Results.Thresh.temp',Results.maximalTemp',...
             Results.minimalTemp', double(Results.Tmin_category)', ...
             Results.Corr.AboveThPear.R', Results.Corr.AtTh.R', ...
@@ -207,18 +208,18 @@ if analysislogic == 1
             Results.ResponseBin2', Results.AdaptBins(1,:)',...
             Results.AdaptBins(2,:)',...
              Results.TmaxEarly_Cat', Results.TmaxLate_Cat',...
-             Results.max_absdev', Results.sum_absdev',...
             'VariableNames',headers);
     elseif assaytype == 2
         headers={'UIDs','BelowTh_Pearsons_R', 'Tstar', ...
             'Minimal_Temp',strcat('ResponseSize_',num2str(Stim.Analysis(1)),'C'),...
             strcat('ResponseSize_',num2str(Stim.Analysis(2)),'C'),...
-            'TminEarly', 'TminLate',...
+            'TminEarly', 'TminLate','Tminfirst5', 'Tminlast5','F0last5',...
             'TminEarly_Cat', 'TminLate_Cat'};
         T=table(UIDs',Results.Corr.BelowTh.R', Results.Thresh.temp', ...
             Results.minimalTemp', Results.ResponseBin1',...
             Results.ResponseBin2',Results.AdaptBins(1,:)',...
-            Results.AdaptBins(2,:)',...
+            Results.AdaptBins(2,:)',Results.AdaptBins(3,:)',...
+             Results.AdaptBins(4,:)',Results.AdaptBins(5,:)',...
              Results.TminEarly_Cat', Results.TminLate_Cat',...
              'VariableNames',headers);
     end
