@@ -84,9 +84,8 @@ end
 %% Calculate Temperature at which point trace deviates from F0 response by 3*STD of F0 response for time it takes to change 0.25C
 % The amount of time the absolute value of the trace should be above threshold should reflect 0.25 degree C
 % Calculate based on ramp rate such that:
-% If ramp rate is 0.025C/s, the time it would take to increase 0.25C is 10
-% seconds. Remember that the imaging data was downsampled to a frame rate
-% of 1 frame/sec.
+% If ramp rate is 0.025C/s, the time it would take to increase 0.25C is 10 seconds, which equals 20 frames.
+
 for i = 1:size(Temps.subset,2)
     base(i)=mean(CaResponse.subset(find(Temps.subset(:,i)<=(Stim.F0+.2) & Temps.subset(:,i) >= (Stim.F0 - 0.2)),i));
     stdbase(i)=std(CaResponse.subset(find(Temps.subset(:,i)<=(Stim.F0+.2) & Temps.subset(:,i) >= (Stim.F0 - 0.2)),i));
@@ -96,7 +95,7 @@ end
 n_expt = size(CaResponse.subset,2);
 disp(strcat('number of recordings: ',num2str(n_expt)));
 
-N = 0.25/time.rampspeed; % required number of consecutive numbers following a first one
+N = 0.25/time.rampspeed*2; % required number of consecutive numbers following a first one (with a 500 ms frame rate, this is N/2 seconds)
 
 if assaytype ~= 2
     % RUN THIS FOR EACH INDIVIDUAL EXPERIMENTAL TRACE
@@ -207,26 +206,22 @@ for i = 1:n_expt
     
     if assaytype ~=2
         temp = (CaResponse.full(find(Temps.full(:,i)>=Stim.max, 1,'first'):find(Temps.full(:,i)>=Stim.max-0.1, 1,'last'),i));
-        Results.AdaptBins(1,i) = median(temp(1:15));
-        Results.AdaptBins(2,i) = median(temp(61:75));
+        Results.AdaptBins(1,i) = median(temp(1:30));
+        Results.AdaptBins(2,i) = median(temp(size(temp,1)-30:end));
     else
         % For cooling ramps, compare first 15 seconds versus final 15 sec
         temp = (CaResponse.full(find(Temps.full(:,i)<=Stim.min+0.1, 1,'first'):find(Temps.full(:,i)<=Stim.min+0.1, 1,'last'),i));
-        Results.AdaptBins(1,i) = median(temp(1:15));
-        Results.AdaptBins(2,i) = median(temp(61:75));
-        
-        % For cooling ramps, compare 4 time bins, spaced 1 min apart
-       
-        Results.AdaptBins(3,i) = median(CaResponse.full(220:230,i));
-        Results.AdaptBins(4,i) = median(CaResponse.full(340:350,i));
-        Results.AdaptBins(5,i) = median(CaResponse.full(460:470,i));
-        
-        % And get the temps
-        
-        Results.AdaptBins(6,i) = median(Temps.full(220:230,i));
-        Results.AdaptBins(7,i) = median(Temps.full(340:350,i));
-        Results.AdaptBins(8,i) = median(Temps.full(460:470,i));
-
+        Results.AdaptBins(1,i) = median(temp(1:30));
+        Results.AdaptBins(2,i) = median(temp(size(temp,1)-30:end));
+        % For cooling ramps, compare first and last 5 seconds at stim.min
+        Results.AdaptBins(3,i) = median(temp(1:10));
+        Results.AdaptBins(4,i) = median(temp(size(temp,1)-10:end));
+        % Also last 5 seconds before cooling ramp 
+        temp = (CaResponse.full(1:find(Temps.full(:,i)<=(Stim.F0-0.5), 1,'first'),i));
+        ttemp = (Temps.full(1:find(Temps.full(:,i)<=(Stim.F0-0.5), 1,'first'),i));
+        temp = temp(1:find(ttemp>=(Stim.F0-0.1),1,'last'));
+        Results.AdaptBins(5,i) = median(temp(size(temp,1)-10:end));
+    
     end   
 end
 

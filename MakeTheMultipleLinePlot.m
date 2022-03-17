@@ -1,8 +1,5 @@
-function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, n, varargin)
-% varargin = x axis locations to draw vertical lines
+function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, n, vertline, vertline2)
 global newdir
-
-
 
 
 C=cbrewer('qual', 'Dark2', 7, 'PCHIP');
@@ -12,10 +9,8 @@ ax.up = subplot(3,1,[1:2]);
 
 hold on;
 
-for k = 1:length(varargin)
-    xline(varargin{k},'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
-end
-
+xline(vertline,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+xline(vertline2,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
 plot([1:size(Ca,1)],Ca, 'LineWidth', 1);
 plot([1:size(Ca,1)],median(Ca,2, 'omitnan'),'LineWidth', 2, 'Color', 'k');
 
@@ -31,11 +26,8 @@ ax.dwn = subplot(3,1,3);
 shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'k',0);
 set(gca,'xtickMode', 'auto');
 hold on; 
-
-for k = 1:length(varargin)
-    xline(varargin{k},'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
-end
-
+xline(vertline,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+xline(vertline2,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
 hold off;
 ylim([floor(min(avg_Tmp)-max(err_Tmp)),ceil(max(avg_Tmp)+max(err_Tmp))]);
 ylim([10, 41]);
