@@ -1,6 +1,6 @@
-function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, n, vertline, vertline2)
+function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, n, varargin)
+% varargin = x axis locations to draw vertical lines
 global newdir
-
 
 C=cbrewer('qual', 'Dark2', 7, 'PCHIP');
 set(groot, 'defaultAxesColorOrder', C);
@@ -9,14 +9,16 @@ ax.up = subplot(3,1,[1:2]);
 
 hold on;
 
-xline(vertline,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
-xline(vertline2,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+for k = 1:length(varargin)
+    xline(varargin{k},'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+end
+
 plot([1:size(Ca,1)],Ca, 'LineWidth', 1);
 plot([1:size(Ca,1)],median(Ca,2, 'omitnan'),'LineWidth', 2, 'Color', 'k');
 
 hold off;
+
 xlim([0, size(Ca,1)]);
-ylim([floor(min(min(Ca))),ceil(max(max(Ca)))]);
 ylim([-50, 60]);
 
 set(gca,'XTickLabel',[]);
@@ -26,10 +28,12 @@ ax.dwn = subplot(3,1,3);
 shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'k',0);
 set(gca,'xtickMode', 'auto');
 hold on; 
-xline(vertline,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
-xline(vertline2,'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+
+for k = 1:length(varargin)
+    xline(varargin{k},'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+end
+
 hold off;
-ylim([floor(min(avg_Tmp)-max(err_Tmp)),ceil(max(avg_Tmp)+max(err_Tmp))]);
 ylim([10, 41]);
 xlim([0, size(Ca,1)]);
 ylabel('Temperature (celcius)','Color','k');

@@ -33,11 +33,6 @@ set(0,'DefaultFigureVisible','on');
 %% Plot Average Traces and Heat Maps
 if numfiles > 1
     % Calculate Mean and SD with non-normalized data
-    % Note: by including NaN values, if a trace is missing values b/c it is
-    % truncated, the entire average trace will be truncated to match. To
-    % change this behavior, switch the nan flag to 'omitnan'
-    avg_Ca = mean(CaResponse.full,2,'omitnan');
-    sd_Ca = std(CaResponse.full,[],2,'omitnan');
     avg_Tmp = mean(Temps.full,2,'omitnan');
     sd_Tmp = std(Temps.full,[],2,'omitnan');
     
@@ -54,13 +49,13 @@ if numfiles > 1
             mean(Temps.Tmax,2,'omitnan'), ...
             std(Temps.Tmax,[],2,'omitnan'), ...
             strcat(n, '_TmaxZoom'), find(mean(Temps.Tmax,2,'omitnan') >= Stim.max, 1, 'first'), ...
-            find(mean(Temps.Tmax,2,'omitnan') >= Stim.max-0.1, 1, 'last'));
+            find(mean(Temps.Tmax,2,'omitnan') >= Stim.max, 1, 'first')+60);
         else
             MakeTheMultipleLinePlot(CaResponse.Tmin_adjusted, ...
             mean(Temps.Tmin,2,'omitnan'), ...
             std(Temps.Tmin,[],2,'omitnan'), ...
             strcat(n, '_TminZoom'), find(mean(Temps.Tmin,2,'omitnan') <= Stim.min+0.1, 1, 'first'),...
-            find(mean(Temps.Tmin,2,'omitnan') <= Stim.min+0.1, 1, 'last'));
+            find(mean(Temps.Tmin,2,'omitnan') <= Stim.min+0.1, 1, 'first')+60);
         end
     end
         

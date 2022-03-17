@@ -18,7 +18,7 @@ global assaytype
 if ~exist('answer')
     [answer, ok] = listdlg('PromptString','Which stimulus was applied during these recordings?',...
         'SelectionMode','single',...
-        'ListString',{'Pos Ramp 4 (23->17->40->23)';  'Neg Ramp 2 (23->22->13->23)'; 'pFictive PT (23->20->34->23)'; 'pFictive PT15 (15->12->26->15)';'pF Extended (23->20->40->23)'; 'pF PT15 extended (15->12->32->15)'; 'Reversal (15->22->15)'}, ...
+        'ListString',{'Rapid Heating (23->17->40->23)';  'Cooling Ramp (23->22->13->23)'; 'Heating (23->20->34->23)'; 'Heating PT15 (15->12->26->15)';'Heating Extended (23->20->40->23)'; 'Heating PT15 extended (15->12->32->15)'; 'UTurn (15->22->15)'}, ...
         'InitialValue', [3]);
     
     if ok<1
@@ -28,8 +28,8 @@ end
 
 % Handle response
 switch answer
-    case 1 % Pos Ramp 4
-        assaytype = 1;
+    case 1 % Rapid Heating Ramp (17 -> 40C @0.1C/s)
+        assaytype = 1; % Positive Thermotaxis
         Stim.min = 17;
         Stim.max = 40;
         Stim.F0 = 17;
@@ -43,20 +43,7 @@ switch answer
         time.pad = [0; 0 ; 120; 500]; % start/end times of standardized "full" range for export
         Pname = 'Pos Ramp 4';
         
-%     case 2 % 'Pos Ramp 5 (23->17->25->23)';
-%         assaytype = 1; % Positive Ramp
-%         Stim.min = 17;
-%         Stim.max = 25;
-%         Stim.F0 = 17;
-%         Stim.holding = 23;
-%         Stim.NearTh = [19; 25];
-%         Stim.AboveTh = [24.8];
-%         Stim.Analysis = [17; 20];
-%         time.soak = 60; % duration (sec) of soak time at coolest point in thermal stimulus; indicates amount of time to wait before gathering data for export
-%         time.stimdur = 350; % duration of stimulus upwards ramp
-%         time.pad = [0;0 ; 120; 500]; % start/end times of standardized "full" range for export
-%         Pname = 'Pos Ramp 5';
-case 2 % Neg Ramp 2
+case 2 % Cooling Ramp (22 -> 13C @ 0.1C/s)
         assaytype = 2; % Negative Ramp
         Stim.min = 13;
         Stim.max =23;
@@ -70,8 +57,8 @@ case 2 % Neg Ramp 2
         time.pad = [0;0 ;120;580];
         Pname = 'Neg Ramp 2';
 
-    case 3 % pFictive Ramp
-        assaytype = 1; % Pseudo-fictive Positive Thermotaxis
+    case 3 % Heating Ramp (20 -> 34C @0.025C/s)
+        assaytype = 1; % Positive Thermotaxis
         Stim.min = 20;
         Stim.max = 34;
         Stim.F0 = 20;
@@ -87,8 +74,8 @@ case 2 % Neg Ramp 2
         
     
         
-     case 4 % pFictive Ramp Tc = 15
-        assaytype = 3; % Pseudo-fictive Positive Thermotaxis
+     case 4 % Heating PT15 (12 -> 26C @0.025C/s) Tambient = 15
+        assaytype = 3; % Positive Thermotaxis, Tambient = 15
         Stim.min = 12;
         Stim.max = 26;
         Stim.F0 = 12;
@@ -102,8 +89,8 @@ case 2 % Neg Ramp 2
         time.pad = [60; 0 ; 120; 760]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
         Pname = 'pF PT15';
         
-        case 5 % pFictive Extended Ramp
-        assaytype = 1; % Pseudo-fictive Positive Thermotaxis
+        case 5 % Heating Extended (20 -> 40C @0.025C/s)
+        assaytype = 1; % Positive Thermotaxis
         Stim.min = 20;
         Stim.max = 40;
         Stim.F0 = 20;
@@ -117,8 +104,8 @@ case 2 % Neg Ramp 2
         time.pad = [60; 0 ; 120; 1060]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
         Pname = 'pF PT extended';
         
-         case 6 % pFictive15 Extended
-        assaytype = 3; %Tc = 15
+         case 6 % Heating Extended PT15 (12 -> 32C @0.025C/s) Tambient = 15
+        assaytype = 3; %Positive Thermotaxis, Tambient = 15
         Stim.min = 12;
         Stim.max = 32;
         Stim.F0 = 12;
@@ -132,8 +119,8 @@ case 2 % Neg Ramp 2
         time.pad = [60; 0 ; 120; 1060]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
         Pname = 'pF pT15 extended';
         
-        case 7 % Reversal Ramp Tc = 15
-        assaytype = 4; % Pseudo-fictive Positive Thermotaxis
+        case 7 % U-turn Tc = 15
+        assaytype = 4; % U-turn
         Stim.min = 15;
         Stim.max = 22;
         Stim.F0 = 15;
@@ -145,5 +132,5 @@ case 2 % Neg Ramp 2
         time.stimdur = 560; % duration (in sec) from start of F0 to end of upwards ramp
         time.rampspeed = 0.025; % rate of temperature change during primary phase, in degrees per second
         time.pad = [0; 0 ; 0; 900]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
-        Pname = 'Reversal';
+        Pname = 'U-Turn';
 end

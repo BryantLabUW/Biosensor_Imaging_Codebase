@@ -55,6 +55,12 @@ sub_templog = templog(S,:);
 lossyID=retime(imagingdata,'secondly','mean');
 lossyTL=retime(sub_templog,'secondly','mean');
 
+% If there are missing values due to the secondly averaging above not
+% matching to a specific time, these next two lines will fill in those
+% values. 
+lossyID=retime(lossyID,'secondly','nearest');
+lossyTL=retime(lossyTL,'secondly', 'nearest');
+
 %% Align Imaging and Temperature Log Data
 AlignedData = synchronize(lossyID,lossyTL,'intersection');
 if isempty(AlignedData)
