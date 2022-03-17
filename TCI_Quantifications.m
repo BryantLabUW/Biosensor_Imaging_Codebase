@@ -23,7 +23,7 @@ if assaytype ~= 2
         % Temperature bin of above T(holding)
         Temps.AboveTh(1:size(find(Temps.subset(:,i)>=Stim.AboveTh(1)),1),i) = Temps.subset(find(Temps.subset(:,i)>=Stim.AboveTh(1)),i);
         CaResponse.AboveTh(1:size(find(Temps.subset(:,i)>=Stim.AboveTh(1)),1),i) = CaResponse.subset(find(Temps.subset(:,i)>=Stim.AboveTh(1)),i);
-        
+
         % Temperature bin of near T(max)
         Temps.Tmax(1:size(find(Temps.full(:,i)>=Stim.max(1)-3),1),i) = Temps.full(find(Temps.full(:,i)>=Stim.max(1)-3),i);
         CaResponse.Tmax(1:size(find(Temps.full(:,i)>=Stim.max(1)-3),1),i) = CaResponse.full(find(Temps.full(:,i)>=Stim.max(1)-3),i);
@@ -40,7 +40,20 @@ if assaytype ~= 2
     [Results.rsq.AboveThPear, Results.Corr.AboveThPear] = TCI_ResponseFitting(Temps.AboveTh, CaResponse.AboveTh,1);
     [Results.rsq.AboveThSpear, Results.Corr.AboveThSpear] = TCI_ResponseFitting(Temps.AboveTh, CaResponse.AboveTh,2);
     [~, Results.Corr_Instant] = TCI_ResponseFitting(Temps.subset, CaResponse.subset, 3, Stim);
-    
+     
+    for i = 1:size(Temps.subset,2)
+ 
+         % Temperature subset between AboveTh(1) and Stim.Analysis(1)
+        Temps.AboveThBin1(1:size(find(Temps.subset(:,i)>=Stim.AboveTh(1) & Temps.subset(:,i)<=Stim.Analysis(1)),1),i) = Temps.subset(find(Temps.subset(:,i)>=Stim.AboveTh(1) & Temps.subset(:,i)<=Stim.Analysis(1)),i);
+        CaResponse.AboveThBin1(1:size(find(Temps.subset(:,i)>=Stim.AboveTh(1) & Temps.subset(:,i)<=Stim.Analysis(1)),1),i) = CaResponse.subset(find(Temps.subset(:,i)>=Stim.AboveTh(1) & Temps.subset(:,i)<=Stim.Analysis(1)),i);
+        
+        % Temperature subset 1 above Stim.Analysis(1)
+        Temps.AboveThBin2(1:size(find(Temps.subset(:,i)>=Stim.Analysis(1)),1),i) = Temps.subset(find(Temps.subset(:,i)>=Stim.Analysis(1)),i);
+        CaResponse.AboveThBin2(1:size(find(Temps.subset(:,i)>=Stim.Analysis(1)),1),i) = CaResponse.subset(find(Temps.subset(:,i)>=Stim.Analysis(1)),i);
+ end
+  [Results.rsq.Bin1Pear, Results.Corr.Bin1Pear] = TCI_ResponseFitting(Temps.AboveThBin1, CaResponse.AboveThBin1,1);
+   [Results.rsq.Bin2Pear, Results.Corr.Bin2Pear] = TCI_ResponseFitting(Temps.AboveThBin2, CaResponse.AboveThBin2,1);
+     
     
 else
     %% Generate data subsets for negative thermotaxis ramps

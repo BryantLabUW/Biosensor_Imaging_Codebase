@@ -97,7 +97,7 @@ case 2 % Cooling Ramp (22 -> 13C @ 0.1C/s)
         Stim.holding = 23;
         Stim.NearTh = [20; 25];
         Stim.AboveTh = [25];
-        Stim.Analysis = [22; 25];
+        Stim.Analysis = [32; 34];
         time.soak = 120; % duration (sec) of soak time at coolest point in thermal stimulus; indicates amount of time to wait before gathering data for export
         time.stimdur = 880; % duration (in sec) from start of F0 to end of upwards ramp
         time.rampspeed = 0.025; % rate of temperature change during primary phase, in degrees per second
