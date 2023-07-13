@@ -1,10 +1,10 @@
 function [] = TCI_Plots(Temps, CaResponse, Stim, UIDs, n, numfiles, Results, time)
 %% TCI_Plots
-%   Generates and saves plots of YC3.6 Thermal Imaging
-%   TCI_Plots(Temps, CaResponse, name, n, numfiles)
+%   Generates and saves plots of YC3.60 Thermal Imaging
+%   TCI_Plots(Temps, CaResponse, Stim, UIDs, n, numfiles, Results, time)
 %
-%   Version 1.0
-%   Version Date: 3-31-20
+%   Version 2.0
+%   Version Date: 3-18-22
 %
 %% Revision History
 %   3-31-20:    Forked from older version by ASB

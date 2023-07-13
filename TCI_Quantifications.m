@@ -1,6 +1,6 @@
 function [Temps, CaResponse, Results] = TCI_Quantifications (Temps,CaResponse, Stim, time,n)
 %% TCI_Quantifications
-%   Quantifies YC3.6 responses to thermal stimuli. Calculations include:
+%   Quantifies YC3.60 responses to thermal stimuli. Calculations include:
 %   T*, temp eliciting maximal response, mean Ca response at specified temp
 %   bins, Pearson and Spearman Correlation coefficients
 

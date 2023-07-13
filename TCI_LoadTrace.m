@@ -1,14 +1,10 @@
 function [subset_cAD,subset_temp, full_cAD, full_temp, prestim_cAD, prestim_temp, complete_cAD, complete_temp] = TCI_LoadTrace(filename, tempname, fulltemp, Stim, time)
 %% TCI_LoadTrace
-%   Loads a single YC3.6 trace
+%   Loads a single YC3.60 trace
 %   [subset_cAD,subset_temp, full_cAD, full_temp] = TCI_LoadTrace(filename, tempname, fulltemp, Stim, time)
 %
-%   Version 1.0
-%   Version Date: 3-31-20
-%
-%% Revision History
-%   3-31-20:    Forked from older version by ASB
-%
+%   Version 1.1
+%   Version Date: 3-31-22
 
 warning('off','all'); % Don't display warnings
 [~, UID, ~] = fileparts(filename);

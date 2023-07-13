@@ -2,14 +2,7 @@ function [rsq, Correlation] = TCI_ResponseFitting (Temps,CaResponse, degree, Sti
 %%  TCI_ThermalResponseFitting
 %   Linear fitting and correlation analysis of a set of temperature-driven calcium responses
 %   Input is a structure array with fields named Temps and CaResponse
-%   [rsq, Correlation] = TCI_ResponseFitting (Temps, CaResponse, degree, name)
-%
-%   Version number 1.0
-%   Version date: 4-1-20
-%
-%% Revision History
-%   10-16-19 Created by ASB
-%   04-01-20    Name revised by ASB
+%   [rsq, Correlation] = TCI_ResponseFitting (Temps,CaResponse, degree, Stim)
 %
 
 %% Code

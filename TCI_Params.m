@@ -3,14 +3,9 @@ function [Stim, time, Pname] = TCI_Params(answer);
 %   Contains user-defined variables describing thermal stimuli for calcium
 %   imaging experiments.
 %
-%   Version number: 1.1
-%   Version date: 10-17-20
+%   Version number: 2.0
+%   Version date: 3-18-22
 
-%% Revision History
-%   10-19-19    Forked from crawl_Cam file by ASB
-%   11-15-19    Added an F0 parameter, for when the baseline F0 isn't the
-%               same as the minimum stimulus. (ASB)
-%   03-01-20    Renamed and made prettier (ASB)
 
 %% Code
 

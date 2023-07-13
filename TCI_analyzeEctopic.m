@@ -3,10 +3,12 @@ function [] = TCI_analyzeEctopic
 %   [] = analyzeEctopic()
 %   Calculates thermal threshold in terms of deviation from a baseline.
 %   Plots average responses and generates heatmaps.
-%   Applied to ecotpic expression experiments.
+%   Applied to ectopic expression experiments.
+%   Before running this code, users should generate preprocessed .mat files
+%   using the TCI_Proprocess.m script.
 %
-%   Version number: 2.0.0
-%   Version date: 2020_12_04
+%   Version number: 2.1.0
+%   Version date: 2022_03_18
 
 %% Revision History
 %
@@ -27,7 +29,7 @@ function [] = TCI_analyzeEctopic
 % 2020_12_04    Changed how threshold is calculated. Previous: 3*RMS of
 %               control trace, for at least 6 seconds (12 frames). Now:
 %               must exceed the mean of control + 3* std(control) for
-%               at least 40 seconds (80 frames, at a rate of 0.025c/S
+%               at least 40 seconds (40 frames, at a rate of 0.025c/S
 %               this equals 1 degreeC). By eye, this looks a lot more
 %               accurate.
 % 2021_01_21    Changed heatmap such that the heamtap rows (individual

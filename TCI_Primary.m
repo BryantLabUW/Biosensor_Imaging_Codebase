@@ -1,5 +1,5 @@
 function [Temps, CaResponse] = TCI_Primary ()
-%% TCI_Primary processes YC3.6 calcium responses to a variety of thermotaxis ramps
+%% TCI_Primary processes YC3.60 calcium responses to a variety of thermotaxis ramps
 %   [] = TCI_Primary()
 
 clear all
