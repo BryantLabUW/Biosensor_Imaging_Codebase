@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Script>
+  <Context>Zen26</Context>
+  <Version>1.0</Version>
+  <Language>Python</Language>
+  <Text>from System.IO import File, Directory, FileInfo
+##--- Set Control Variables ---
+window = ZenWindow()
+#TopName = ""
+#BottomName = ""
+#xSplitOffset = 0
+
+##--- Create / Get Settings ---
+SettingsPath = Zen.Application.Environment.GetFolderPath(ZenSpecialFolder.UserDocuments) + "\\Macros\\BmTpSet.py"
+
+window.Title = "Change Split and Overlay Settings"
+window.AddTextBox("TopName", "Top Channel Name", "CFP")
+window.AddIntegerRange("TopColorR", "Top Channel Color R", 0, 0, 255)
+window.AddIntegerRange("TopColorG", "Top Channel Color G", 255, 0, 255)
+window.AddIntegerRange("TopColorB", "Top Channel Color B", 255, 0, 255)
+window.AddTextBox("BottomName", "Bottom Channel Name", "YFP")
+window.AddIntegerRange("BottomColorR", "Bottom Channel Color R", 255, 0, 255)
+window.AddIntegerRange("BottomColorG", "Bottom Channel Color G", 255, 0, 255)
+window.AddIntegerRange("BottomColorB", "Bottom Channel Color B", 0, 0, 255)
+#window.AddCheckbox('overwrite', 'Overwrite Existing Files ', False)
+##
+## get and check results
+result=window.Show()
+TopName = result.GetValue("TopName")
+BottomName = result.GetValue("BottomName")
+TR = result.GetValue("TopColorR")
+TG = result.GetValue("TopColorG")
+TB = result.GetValue("TopColorB")
+BR = result.GetValue("BottomColorR")
+BG = result.GetValue("BottomColorG")
+BB = result.GetValue("BottomColorB")
+f = open( SettingsPath, 'w' )
+f.write( 'TopName = "' + TopName + '"\n' )
+f.write( 'BottomName = "' + BottomName + '"\n')
+f.write( 'TR = ' + str(TR) + '\n')
+f.write( 'TG = ' + str(TG) + '\n')
+f.write( 'TB = ' + str(TB) + '\n')
+f.write( 'BR = ' + str(BR) + '\n')
+f.write( 'BG = ' + str(BG) + '\n')
+f.write( 'BB = ' + str(BB) + '\n')
+f.close()
+
+
+</Text>
+  <Author></Author>
+  <Description></Description>
+  <Keywords></Keywords>
+  <Row>13</Row>
+  <Column>62</Column>
+  <Breakpoints>
+    <Breakpoint>8</Breakpoint>
+  </Breakpoints>
+</Script>

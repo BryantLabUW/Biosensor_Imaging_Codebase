@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Script>
+  <Context>Zen26</Context>
+  <Version>1.0.0</Version>
+  <Language>Python</Language>
+  <Text>## W-Gemini Top/Bottom Split and Overlay 9/9/2019 Adapted from:
+#######################################################
+## SPLIT ACTIVE IMAGE INTO RIGHT AND LEFT HALVES AND
+## THEN OVERLAY THEM IN AN OUTPUT IMAGE WITH THE LEFT
+## HALF RED AND THE RIGHT HALF GREEN
+#######################################################
+## V 2.0  2013-04-25a  JSM
+##
+from System.IO import File, Directory, FileInfo
+##--- Set Control Variables ---
+fDebug = False
+window = ZenWindow()
+TopName = ""
+BottomName = ""
+#xSplitOffset = 0
+
+##--- Create / Get Settings ---
+SettingsPath = Zen.Application.Environment.GetFolderPath(ZenSpecialFolder.UserDocuments) + "\\Macros\\BmTpSet.py"
+if File.Exists(SettingsPath):
+    import BmTpSet
+    reload(BmTpSet)
+    #Settings = open(SettingsPath, 'r')
+else:
+    ## add components to dialog
+    window.AddTextBox("TopName", "Top Channel Name", "CFP")
+    window.AddIntegerRange("TopColorR", "Top Channel Color R", 0, 0, 255)
+    window.AddIntegerRange("TopColorG", "Top Channel Color G", 255, 0, 255)
+    window.AddIntegerRange("TopColorB", "Top Channel Color B", 255, 0, 255)
+    window.AddTextBox("BottomName", "Bottom Channel Name", "YFP")
+    window.AddIntegerRange("BottomColorR", "Bottom Channel Color R", 255, 0, 255)
+    window.AddIntegerRange("BottomColorG", "Bottom Channel Color G", 255, 0, 255)
+    window.AddIntegerRange("BottomColorB", "Bottom Channel Color B", 0, 0, 255)
+    #window.AddCheckbox('overwrite', 'Overwrite Existing Files ', False)
+    ##
+    ## get and check results
+    result=window.Show()
+    TopName = result.GetValue("TopName")
+    BottomName = result.GetValue("BottomName")
+    TR = result.GetValue("TopColorR")
+    TG = result.GetValue("TopColorG")
+    TB = result.GetValue("TopColorB")
+    BR = result.GetValue("BottomColorR")
+    BG = result.GetValue("BottomColorG")
+    BB = result.GetValue("BottomColorB")
+    f = open( SettingsPath, 'w' )
+    f.write( 'TopName = "' + TopName + '"\n' )
+    f.write( 'BottomName = "' + BottomName + '"\n')
+    f.write( 'TR = ' + str(TR) + '\n')
+    f.write( 'TG = ' + str(TG) + '\n')
+    f.write( 'TB = ' + str(TB) + '\n')
+    f.write( 'BR = ' + str(BR) + '\n')
+    f.write( 'BG = ' + str(BG) + '\n')
+    f.write( 'BB = ' + str(BB) + '\n')
+    f.close()
+    import BmTpSet
+    reload(BmTpSet)
+
+##--- Get Active Image ---
+imgSrc = Zen.Application.Documents.ActiveDocument
+if not imgSrc :
+    sys.exit("\nPlease open an image first.") 
+
+##--- Create XY Image Sub Region Strings (e.g. "X(0-234)|Y(0-238)") ---
+cy = imgSrc.Bounds.SizeY
+cyHalf = cy / 2
+if (cy &gt; (cyHalf * 2)):
+    cy = cyHalf * 2
+cx = imgSrc.Bounds.SizeX
+strTop = "X(0-" + str(cx) + ")|Y(0-" + str(cyHalf) + ")"
+strBottom = "X(0-" + str(cx) + ")|Y(" + str(cyHalf+1) + "-" + str(cy) + ")"
+
+##--- Get the Image Halves ---
+imgTop = Zen.Processing.Utilities.CreateSubset(imgSrc, strTop)
+imgTop.SetChannelColor(0,BmTpSet.TR,BmTpSet.TG,BmTpSet.TB)
+imgTop.SetChannelName(0, BmTpSet.TopName)
+
+if (fDebug == True):
+    imgTop.Name = "Top"
+    Zen.Application.Documents.Add(imgTop)
+imgBottom = Zen.Processing.Utilities.CreateSubset(imgSrc, strBottom)
+imgBottom.SetChannelColor(0,BmTpSet.BR,BmTpSet.BG,BmTpSet.BB)
+imgBottom.SetChannelName(0, BmTpSet.BottomName)
+
+if (fDebug == True):
+    imgBottom.Name = "Bottom"
+    Zen.Application.Documents.Add(imgBottom)
+
+##--- Combine the Image Halves as Channels ---
+imgDest = Zen.Processing.Utilities.AddChannels(imgTop, imgBottom)
+
+##imgDest.AddSubImage(imgTop, 0, 0, 0)
+##imgDest.AddSubImage(imgBottom, 0, 1, 0)
+
+Zen.Application.Documents.Add(imgDest)
+
+##
+#######################################################
+</Text>
+  <Author></Author>
+  <Description></Description>
+  <Keywords></Keywords>
+  <Row>61</Row>
+  <Column>17</Column>
+  <WatchVariables>
+    <Watch>BmTpSet.TR</Watch>
+    <Watch>BmTpSet.TG</Watch>
+    <Watch>BmTpSet.TB</Watch>
+    <Watch>imgSrc.IsZenImage</Watch>
+  </WatchVariables>
+</Script>
