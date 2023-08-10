@@ -23,16 +23,16 @@ roi2.RFP = fulltable{3:2:end,5};
 GFP = (roi1.GFP-roi2.GFP);
 RFP = (roi1.RFP-roi2.RFP);
 
-GFP_RFP_ratio =  GFP/RFP;
+GFP_RFP_ratio =  GFP./RFP;
 
 %% Load GFP data ONLY from a single .csv file
-roi1.GFP = fulltable{2:2:end,4};
-
-roi2.GFP = fulltable{3:2:end,4};
-
-GFP = (roi1.GFP-roi2.GFP);
-
-GFP_RFP_ratio =  GFP;
+% roi1.GFP = fulltable{2:2:end,4};
+% 
+% roi2.GFP = fulltable{3:2:end,4};
+% 
+% GFP = (roi1.GFP-roi2.GFP);
+% 
+% GFP_RFP_ratio =  GFP;
 
 %% Extract timestamps and make imaging datatable
 imagetime = fulltable{2:2:end,6};

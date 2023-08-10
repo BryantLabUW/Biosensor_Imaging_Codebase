@@ -13,7 +13,7 @@ global assaytype
 if ~exist('answer')
     [answer, ok] = listdlg('PromptString','Which stimulus was applied during these recordings?',...
         'SelectionMode','single',...
-        'ListString',{'Rapid Heating (23->17->40->23)';  'Cooling Ramp (23->22->13->23)'; 'Heating (23->20->34->23)'; 'Heating PT15 (15->12->26->15)';'Heating Extended (23->20->40->23)'; 'Heating PT15 extended (15->12->32->15)'; 'UTurn (15->22->15)'}, ...
+        'ListString',{'Rapid Heating (23->17->40->23)';  'Cooling Ramp (23->22->13->23)'; 'Heating (23->20->34->23)'; 'Heating PT15 (15->12->26->15)';'Heating Extended (23->20->40->23)'; 'Heating PT15 extended (15->12->32->15)'; 'UTurn (15->22->15)'; 'Liza (20->18->25->20'}, ...
         'InitialValue', [3]);
     
     if ok<1
@@ -127,5 +127,20 @@ case 2 % Cooling Ramp (22 -> 13C @ 0.1C/s)
         time.stimdur = 560; % duration (in sec) from start of F0 to end of upwards ramp
         time.rampspeed = 0.025; % rate of temperature change during primary phase, in degrees per second
         time.pad = [0; 0 ; 0; 900]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
+        Pname = 'U-Turn';
+
+        case 8 % Liza (20->18->25->20)
+        assaytype = 1; % Positive thermotaxis
+        Stim.min = 18;
+        Stim.max = 25;
+        Stim.F0 = 18;
+        Stim.holding = 20;
+        Stim.NearTh = [19; 21];
+        Stim.AboveTh = [21];
+        Stim.Analysis = [18; 25]; % Pick two temperatures to quantify mean calcium response at.
+        time.soak = 120; % duration (sec) of soak time at coolest point in thermal stimulus; indicates amount of time to wait before gathering data for export
+        time.stimdur = 360; % duration (in sec) from start of F0 to end of upwards ramp
+        time.rampspeed = 0.05; % rate of temperature change during primary phase, in degrees per second
+        time.pad = [0; 0 ; 0; 700]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
         Pname = 'U-Turn';
 end
