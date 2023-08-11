@@ -1,4 +1,4 @@
-function [subset_cAD,subset_temp, full_cAD, full_temp, prestim_cAD, prestim_temp, complete_cAD, complete_temp] = LoadTrace(filename, tempname, fulltemp, Stim, time)
+function [full_cAD, full_temp, raw_cAD, raw_temp] = LoadTrace(filename, tempname, fulltemp, Stim, time)
 %% LoadTrace
 %   Loads a single simultaneous GCaMP + RFP trace
 %   [subset_cAD,subset_temp, full_cAD, full_temp] = LoadTrace(filename, tempname, fulltemp, Stim, time)
@@ -85,23 +85,23 @@ baselinecorrection = mean(base(:,1));
 
 correctedAlignedData=((dblAlignedData(:,1)-baselinecorrection)/baselinecorrection)*100;
 
-%% Generate new variables for saving and export
-
-[subset_cAD, subset_temp] = deal(NaN(((time.soak + time.pad(1) + time.stimdur)),1));
-
-% This range should go from F0 to Fmax
-if (indeces(end))-time.soak(1)-time.pad(1) < 0
-    subset_cAD(indeces(1): indeces(end)+time.stimdur) = correctedAlignedData((indeces(1)):(indeces(end)+time.stimdur));
-    subset_temp(indeces(1): indeces(end)+time.stimdur) = dblAlignedData((indeces(1)):(indeces(end)+time.stimdur),6);
-else
-    subset_cAD = correctedAlignedData((indeces(end))-time.soak(1)-time.pad(1):(indeces(end)+time.stimdur-1));
-    subset_temp = dblAlignedData((indeces(end))-time.soak(1)-time.pad(1):(indeces(end)+time.stimdur-1),6);
-end
+%% Generate variables for saving and export
+% 
+% [subset_cAD, subset_temp] = deal(NaN(((time.soak + time.pad(1) + time.stimdur)),1));
+% 
+% % This range should go from F0 to Fmax
+% if (indeces(end))-time.soak(1)-time.pad(1) < 0
+%     subset_cAD(indeces(1): indeces(end)+time.stimdur) = correctedAlignedData((indeces(1)):(indeces(end)+time.stimdur));
+%     subset_temp(indeces(1): indeces(end)+time.stimdur) = dblAlignedData((indeces(1)):(indeces(end)+time.stimdur),6);
+% else
+%     subset_cAD = correctedAlignedData((indeces(end))-time.soak(1)-time.pad(1):(indeces(end)+time.stimdur-1));
+%     subset_temp = dblAlignedData((indeces(end))-time.soak(1)-time.pad(1):(indeces(end)+time.stimdur-1),6);
+% end
 
 % This range includes the prestim period from the start of the recording to
 % F0, in cases where F0 ~= Holding
-prestim_cAD = correctedAlignedData(1:(indeces(1)));
-prestim_temp = dblAlignedData(1:(indeces(1)),6);
+% prestim_cAD = correctedAlignedData(1:(indeces(1)));
+% prestim_temp = dblAlignedData(1:(indeces(1)),6);
 
 [full_cAD, full_temp] = deal(NaN(((indeces(end)+time.pad(4))-((indeces(end)-time.soak(1))-time.pad(3))+1),1));
 
@@ -119,6 +119,6 @@ else
     full_cAD = correctedAlignedData(((indeces(end)-time.soak(1))-time.pad(3)):(indeces(end)+time.pad(4)));
     full_temp = dblAlignedData(((indeces(end)-time.soak(1))-time.pad(3)):(indeces(end)+time.pad(4)),6);
 end
-complete_cAD = correctedAlignedData;
-complete_temp = dblAlignedData(:,6);
+raw_cAD = correctedAlignedData;
+raw_temp = dblAlignedData(:,6);
 end

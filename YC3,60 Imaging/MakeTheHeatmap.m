@@ -26,14 +26,14 @@ subplot(3,1,3);
 colors = get(gca,'colororder');
 shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'r',0);
 set(gca,'xtickMode', 'auto');
-ylim([10, 41]);
+ylim([15, 30]);
 xlim([0, round(size(avg_Tmp,1),-1)]);
 ylabel('Temperature (celcius)','Color','r');
 xlabel('Time (seconds)');
 currentFigure = gcf;
 colorbar
 
-title(currentFigure.Children(end), strcat(n,'_Cameleon Response Heatmap'),'Interpreter','none');
+title(currentFigure.Children(end), strcat(n,'_Heatmap'),'Interpreter','none');
 
 movegui('northeast');
 

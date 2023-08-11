@@ -1,9 +1,11 @@
 function [Temps, CaResponse] = TGRI_Primary ()
 %% TGRI_Primary processes simultaneous GCaMP + RFP calcium responses to a variety of thermotaxis ramps
 %   [] = TGRI_Primary()
+%   This is a stripped down version for plotting and extracting aligned
+%   temperature and imaging data
 %
-%   Version 1.0
-%   Version Date: 07-24-23
+%   Version 2.0
+%   Version Date: 08-10-23
 
 clear all
 close all
@@ -42,22 +44,23 @@ global pltmulti
 global plttvr
 global pltadapt
 
-plottypes = {'Individual Traces', 'Heatmap', 'Multiple Lines', 'Steady State','Temp vs Response','None', 'Plots Only'};
+plottypes = {'Individual Traces', 'Heatmap', 'Multiple Lines'};
+%plottypes = {'Individual Traces', 'Heatmap', 'Multiple Lines', 'None', 'Plots Only'};
 [answer, OK] = listdlg('PromptString','Pick plots to generate', ...
     'ListString', plottypes, 'ListSize', [160 160], ...
     'InitialValue', [3]);
 answer = plottypes(answer);
-if any(contains(answer, 'None'))
-    plotlogic = 0;
-else
-    plotlogic = 1;
-end
+% if any(contains(answer, 'None'))
+%     plotlogic = 0;
+% else
+%     plotlogic = 1;
+% end
 
-if any(contains(answer, 'Plots Only'))
-    analysislogic = 0;
-else
-    analysislogic = 1;
-end
+% if any(contains(answer, 'Plots Only'))
+%     analysislogic = 0;
+% else
+%     analysislogic = 1;
+% end
 
 if any(contains(answer, 'Individual Traces'))
     plteach = 1;
@@ -79,17 +82,6 @@ else
     pltmulti = 0;
 end
 
-if any(contains(answer, 'Steady State'))
-    pltadapt = 1;
-else
-    pltadapt = 0;
-end
-
-if any(contains(answer, 'Temp vs Response'))
-    plttvr = 1;
-else
-    plttvr = 0;
-end
 
 %% Load and Process Data in .mat format
 if endsWith(filename,'mat')
@@ -127,28 +119,10 @@ if isempty(preprocessed) || preprocessed == 0
     % Import calcium responses and process traces
     for i=1:numfiles
         [~, UIDs{i}, ~] = fileparts(filename{i});
-        [temp.subset(:,1), temp.subset(:,2),... 
-            temp.full(:,1), temp.full(:,2), ...
-            temp.prestim(:,1), temp.prestim(:,2), ...
-            temp.complete(:,1), temp.complete(:,2)]=LoadTrace(filename{i},tempname, fulltemp,Stim, time);
-        sz.subset = size(temp.subset,1);
-        sz.full = size(temp.full,1);
-        sz.prestim = size(temp.prestim, 1);
-        sz.complete = size(temp.complete, 1);
-        
-        CaResponse.subset(1:sz.subset,i) = temp.subset(:,1);
-        Temps.subset(1:sz.subset,i) = temp.subset(:,2);
-        
-        CaResponse.full(1:sz.full,i) = temp.full(:,1);
-        Temps.full(1:sz.full,i) = temp.full(:,2);
-        
-        CaResponse.prestim(1:sz.prestim,i) = temp.prestim(:,1);
-        Temps.prestim(1:sz.prestim,i) = temp.prestim(:,2);
-        CaResponse.prestim(Temps.prestim == 0) = NaN;
-        Temps.prestim(Temps.prestim == 0) = NaN;
-        
-        CaResponse.complete(1:sz.complete, i) = temp.complete(:,1);
-        Temps.complete(1:sz.complete, i) = temp.complete(:,2);
+        [temp.full(:,1), temp.full(:,2)]=LoadTrace(filename{i},tempname, fulltemp, Stim, time);
+        sz.full = size(temp.full, 1);
+        CaResponse.full(1:sz.full, i) = temp.full(:,1);
+        Temps.full(1:sz.full, i) = temp.full(:,2);
         
         clear temp
     end
@@ -167,7 +141,7 @@ if exist(newdir,'dir') == 0
 end
 
 %% Quantifications
-[Temps, CaResponse, Results] = Quantifications (Temps,CaResponse, Stim, time,n);
+%[Temps, CaResponse, Results] = Quantifications (Temps,CaResponse, Stim, time,n);
 
 %% Save Batch Data
 if numfiles >1
@@ -175,65 +149,18 @@ if numfiles >1
 end
 
 %% Plot Data
-if plotlogic > 0
-    Plots(Temps, CaResponse,Stim, UIDs, n, numfiles, Results, time);
-end
+%if plotlogic > 0
+    Plots(Temps, CaResponse,Stim, UIDs, n, numfiles, time);
+%end
 
-%% Save Data
-nAdaptbins = size(Results.AdaptBins,1);
-if analysislogic == 1
-    global assaytype
-    if assaytype ~= 2
-        headers={'UIDs', 'Tstar', 'Maximal_Temp', ...
-            'Minimal_Temp', 'TminAboveTc', ...
-            'AboveTh_Pearsons_R', 'AtTh_Spearmans_R',...
-            strcat('PearsonsR_',num2str(Stim.AboveTh(1)),'to',num2str(Stim.Analysis(1)),'C'),...
-            strcat('PearsonsR_',num2str(Stim.Analysis(1)),'to',num2str(Stim.max(1)),'C'),...
-            'TmaxEarly', 'TmaxLate',...
-            'TmaxEarly_Cat', 'TmaxLate_Cat'};
-        T=table(UIDs', Results.Thresh.temp',Results.maximalTemp',...
-            Results.minimalTemp', double(Results.Tmin_category)', ...
-            Results.Corr.AboveThPear.R', Results.Corr.AtTh.R', ...
-            Results.Corr.Bin1Pear.R', Results.Corr.Bin2Pear.R', ...
-            Results.AdaptBins(1,:)',...
-            Results.AdaptBins(2,:)',...
-             Results.TmaxEarly_Cat', Results.TmaxLate_Cat',...
-            'VariableNames',headers);
-    elseif assaytype == 2
-        headers={'UIDs','BelowTh_Pearsons_R', 'Tstar', ...
-            'Minimal_Temp',strcat('ResponseSize_',num2str(Stim.Analysis(1)),'C'),...
-            strcat('ResponseSize_',num2str(Stim.Analysis(2)),'C'),...
-            'TminEarly', 'TminLate',...
-            'Time_220s',  'Time_340s', 'Time_460s', ...
-            'Temp_220s',  'Temp_340s',  'Temp_460s',...
-            'TminEarly_Cat', 'TminLate_Cat'};
-        T=table(UIDs',Results.Corr.BelowTh.R', Results.Thresh.temp', ...
-            Results.minimalTemp', Results.ResponseBin1',...
-            Results.ResponseBin2',Results.AdaptBins(1,:)',...
-            Results.AdaptBins(2,:)',Results.AdaptBins(3,:)',...
-             Results.AdaptBins(4,:)',Results.AdaptBins(5,:)',...
-             Results.AdaptBins(6,:)',Results.AdaptBins(7,:)',...
-             Results.AdaptBins(8,:)',...
-            Results.TminEarly_Cat', Results.TminLate_Cat',...
-             'VariableNames',headers);
-    end
-    writetable(T,fullfile(newdir,strcat(n,'_results.xlsx')), 'Sheet', 1);
-    
-    % Save Metadata
-    Worm_Strain = regexp(name, Pname, 'split');
-    Worm_Strain = strtrim(Worm_Strain{1});
-    
-    U = [struct2table(Stim, 'AsArray',1), struct2table(time, 'AsArray',1)];
-    U = addvars(U, string(Worm_Strain), string(Pname), 'Before', 'min', 'NewVariableNames',{'Strain', 'StimulusType'});
-    writetable(U, fullfile(newdir, strcat(n,'_results.xlsx')), 'Sheet','Metadata');
-    
+%% Save Data    
     % Save Processed Traces
     V = array2table(CaResponse.full, 'VariableNames',UIDs);
     writetable(V, fullfile(newdir, strcat(n,'_results.xlsx')), 'Sheet','CaResponseTrace');
     
     W = array2table(Temps.full, 'VariableNames',UIDs);
     writetable(W, fullfile(newdir, strcat(n,'_results.xlsx')), 'Sheet','TempTrace');
-end
-disp('Finished Analysis');
+
+disp('Finished!');
 clear all; close all;
 end

@@ -1,4 +1,4 @@
-function [] = Plots(Temps, CaResponse, Stim, UIDs, n, numfiles, Results, time)
+function [] = Plots(Temps, CaResponse, Stim, UIDs, n, numfiles, time)
 %% TCI_Plots
 %   Generates and saves plots of Fluorescent Thermal Imaging
 %   TCI_Plots(Temps, CaResponse, Stim, UIDs, n, numfiles, Results, time)
@@ -38,51 +38,17 @@ if numfiles > 1
     
     % Multiple line plot
     if pltmulti == 1
-        MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n, Results.out);
-    end
-    
-     % Adaptation line plot zoomed on 
-     % This data needs to be normalized correctly
-    if pltadapt == 1
-        if assaytype ~= 2
-        MakeTheMultipleLinePlot(CaResponse.Tmax_adjusted, ...
-            mean(Temps.Tmax,2,'omitnan'), ...
-            std(Temps.Tmax,[],2,'omitnan'), ...
-            strcat(n, '_TmaxZoom'), find(mean(Temps.Tmax,2,'omitnan') >= Stim.max, 1, 'first'), ...
-            find(mean(Temps.Tmax,2,'omitnan') >= Stim.max, 1, 'first')+60);
-        else
-            MakeTheMultipleLinePlot(CaResponse.Tmin_adjusted, ...
-            mean(Temps.Tmin,2,'omitnan'), ...
-            std(Temps.Tmin,[],2,'omitnan'), ...
-            strcat(n, '_TminZoom'), find(mean(Temps.Tmin,2,'omitnan') <= Stim.min+0.1, 1, 'first'),...
-            find(mean(Temps.Tmin,2,'omitnan') <= Stim.min+0.1, 1, 'first')+60);
-        end
+        MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n);
     end
         
     % Normalize traces to the maximum calcium
     % response amongst all traces.
-    % Used for % Correlation plots and Heatmap with normalized data
+    % Used for Heatmap with normalized data
     
-    CaResponse.norm = CaResponse.subset/max(max(CaResponse.subset));
+    CaResponse.norm = CaResponse.full/max(max(CaResponse.full));
+    CaResponse.heat = CaResponse.norm;
+    Temps.heat = Temps.full;
     
-    if assaytype ~= 2
-        CaResponse.heat = CaResponse.norm;
-        Temps.heat = Temps.subset;
-    else
-        
-        % Align the full and subset traces
-        for i = 1:numfiles
-            [~, ia, ~] = intersect(CaResponse.full(:,i), CaResponse.subset(:,i), 'stable');
-            time_adjustment_index(i) = ia(1) - 1;
-        end
-        CaResponse.heat = arrayfun(@(x)(CaResponse.full(time_adjustment_index(x):time_adjustment_index(x)+time.pad(4), x)), [1:numfiles], 'UniformOutput', false);
-        CaResponse.heat = cell2mat(CaResponse.heat);
-        CaResponse.heat =CaResponse.heat/max(max(CaResponse.heat));
-        
-        Temps.heat = arrayfun(@(x)(Temps.full(time_adjustment_index(x):time_adjustment_index(x)+time.pad(4), x)), [1:numfiles], 'UniformOutput', false);
-        Temps.heat = cell2mat(Temps.heat);
-    end
- 
     if pltheat == 1
         setaxes = 1;
         while setaxes>0 % loop through the axes selection until you're happy
@@ -115,21 +81,6 @@ if numfiles > 1
         close all
         
     end
-    
-    
-    if assaytype == 1
-        if plttvr == 1
-            MakeTheTempVResponsePlot(Temps.AtTh, CaResponse.AtTh, Temps.AboveTh, CaResponse.AboveTh, n, Stim,{'AtTh';'AboveTh'});
-            end
-        
-    elseif assaytype == 2
-        if plttvr == 1
-            MakeTheTempVResponsePlot(Temps.BelowTh, CaResponse.BelowTh, [], [], n, Stim,{'BelowTh',''});
-        end
-    elseif assaytype == 3
-        if plttvr == 1
-            MakeTheTempVResponsePlot(Temps.AtTh, CaResponse.AtTh, Temps.AboveTh, CaResponse.AboveTh, n, Stim,{'AtTh';'AboveTh'});
-        end
-    end
+
 end
 end
