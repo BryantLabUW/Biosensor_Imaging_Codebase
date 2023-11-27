@@ -8,7 +8,7 @@ global plotflag
 fig=figure;
 movegui('northeast');
 
-% plot Calcium Trace
+% plot Neural Trace
 ax.up = subplot(3,1,[1:2]);
 plot(Ca,'k');
 xlim([0, round(size(Ca,1),-1)]);
@@ -26,19 +26,8 @@ xlabel('Time (seconds)');
 
 % Give the figure a title
 currentFigure = gcf;
-if contains(pathstr,{'pASB52', 'Ss AFD'})
-    suffix = 'Ss-AFD_';
-elseif contains(pathstr,'pASB53')
-    suffix = 'Ss-BAG--rGC(35)_';
-elseif contains(pathstr,{'pASB55', 'Ss BAG'})
-    suffix = 'Ss-BAG_';
-elseif contains(pathstr,{'IK890', 'Ce AFD'})
-    suffix = 'Ce-AFD_';
-elseif contains(pathstr,{'XL115', 'Ce ASE'})
-    suffix = 'Ce-ASE_cameleon_';
-else
-    suffix = '';
-end
+suffix = '';
+
 title(currentFigure.Children(end), [strcat('Recording', {' '},suffix,string(name))],'Interpreter','none');
 
 % Adjust axis values for the plot

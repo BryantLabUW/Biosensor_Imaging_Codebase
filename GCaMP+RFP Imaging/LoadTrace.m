@@ -1,4 +1,4 @@
-function [full_cAD, full_temp, raw_cAD, raw_temp] = LoadTrace(filename, tempname, fulltemp, Stim, time)
+function [full_cAD, full_temp, raw_cAD, raw_temp] = LoadTrace(filename, fulltemp, Stim, time)
 %% LoadTrace
 %   Loads a single simultaneous GCaMP + RFP trace
 %   [subset_cAD,subset_temp, full_cAD, full_temp] = LoadTrace(filename, tempname, fulltemp, Stim, time)
@@ -127,12 +127,12 @@ else
     full_temp = dblAlignedData(((indeces(end)-time.soak(1))-time.pad(3)):(indeces(end)+time.pad(4)),6);
 end
 
-complete_cAD = correctedAlignedData;
-complete_temp = dblAlignedData(:,6);
+raw_cAD = correctedAlignedData;
+raw_temp = dblAlignedData(:,6);
 else
-    subset_cAD = dblAlignedData(:,1);
-    subset_temp = dblAlignedData(:,6);
     full_cAD = dblAlignedData(:,1);
     full_temp = dblAlignedData(:,6);
+    raw_cAD = dblAlignedData(:,1);
+    raw_temp = dblAlignedData(:,6);
 
 end

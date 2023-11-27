@@ -85,43 +85,29 @@ if isempty(preprocessed) || preprocessed == 0
         [~, UIDs{i}, ~] = fileparts(filename{i});
 
         if templost < 1
-            [temp.subset(:,1), temp.subset(:,2),... 
-            temp.full(:,1), temp.full(:,2), ...
-            temp.prestim(:,1), temp.prestim(:,2), ...
+            [temp.full(:,1), temp.full(:,2), ...
             temp.complete(:,1), temp.complete(:,2)]= LoadTrace(filename{i}, fulltemp,Stim, time);
         else
-            [temp.subset(:,1), temp.subset(:,2),... 
-            temp.full(:,1), temp.full(:,2)] = LoadTrace(filename{i}, [] , Stim, time);
+            [temp.full(:,1), temp.full(:,2)] = LoadTrace(filename{i}, [] , Stim, time);
 
         end
     % Process calcium traces
     if templost < 1
-        sz.subset = size(temp.subset,1);
         sz.full = size(temp.full,1);
-        sz.prestim = size(temp.prestim, 1);
         sz.complete = size(temp.complete, 1);
-        
-        CaResponse.subset(1:sz.subset,i) = temp.subset(:,1);
+       
         CaResponse.full(1:sz.full,i) = temp.full(:,1);
-        CaResponse.prestim(1:sz.prestim,i) = temp.prestim(:,1);
-        CaResponse.prestim(Temps.prestim == 0) = NaN;
         CaResponse.complete(1:sz.complete, i) = temp.complete(:,1);
     else
-        sz.subset = size(temp.subset,1);
         sz.full = size(temp.full,1);
-        CaResponse.subset(1:sz.subset,i) = temp.subset(:,1);
         CaResponse.full(1:sz.full,i) = temp.full(:,1);
     end
    
     % Process temperature traces
     if templost < 1
-        Temps.subset(1:sz.subset,i) = temp.subset(:,2);
         Temps.full(1:sz.full,i) = temp.full(:,2);
-        Temps.prestim(1:sz.prestim,i) = temp.prestim(:,2);
-        Temps.prestim(Temps.prestim == 0) = NaN;
         Temps.complete(1:sz.complete, i) = temp.complete(:,2);
     else
-        Temps.subset(1:sz.subset,i) = temp.subset(:,2);
         Temps.full(1:sz.full,i) = temp.full(:,2);
     end
     clear temp
@@ -143,7 +129,7 @@ global templost
 
 
 if templost < 1
-plottypes = {'Individual Traces', 'Heatmap', 'Multiple Lines', 'None', 'Plots Only'};
+plottypes = {'Individual Traces', 'Heatmap', 'Multiple Lines'};
 
 [answer, OK] = listdlg('PromptString','Pick plots to generate', ...
     'ListString', plottypes, 'ListSize', [160 160], ...
@@ -154,12 +140,14 @@ answer = plottypes(answer);
 % else
 %     plotlogic = 1;
 % end
-
+% 
 % if any(contains(answer, 'Plots Only'))
 %     analysislogic = 0;
 % else
 %     analysislogic = 1;
 % end
+plotlogic = 1;
+analysislogic = 0;
 
 if any(contains(answer, 'Individual Traces'))
     plteach = 1;
@@ -188,59 +176,6 @@ else
     pltmulti = 0;
 end
 
-
-
-
-%% Load and Process Data in .mat format
-if endsWith(filename,'mat')
-    % Pre-processed data in .mat format.
-    load(filename{1});
-    numfiles = size(CaResponse.subset,2);
-    preprocessed = 1;
-    n = regexp(name,'_data','split');
-    
-end
-
-%% Check if for Stimulus Protocol Parameters, load if necessary
-if ~exist('Pname')
-    [Stim, time, Pname] = Params ();
-end
-
-%% Load and Process Data in .csv file format
-if isempty(preprocessed) || preprocessed == 0
-    % Need to pick temperature log.
-    preprocessed = 0;
-    
-    [tempn, tempp] = uigetfile2('*.dat', 'Select concatenated temperature readings file',pathstr);
-    if isequal(tempn,0)
-        error('User canceled analysis session');
-    end
-    tempname = fullfile(tempp, tempn);
-    
-    % Import Temperature Log
-    opts = detectImportOptions(tempname);
-    opts = setvartype(opts,{'Var1','Var2'},'datetime');
-    disp('Importing temperature log...');
-    fulltemp = readtable(tempname,opts);
-    disp('...done');
-    
-    % Import calcium responses and process traces
-    for i=1:numfiles
-        [~, UIDs{i}, ~] = fileparts(filename{i});
-        [temp.full(:,1), temp.full(:,2)]=LoadTrace(filename{i},tempname, fulltemp, Stim, time);
-        sz.full = size(temp.full, 1);
-        CaResponse.full(1:sz.full, i) = temp.full(:,1);
-        Temps.full(1:sz.full, i) = temp.full(:,2);
-        
-        clear temp
-    end
-    
-    % Assign a filename
-    disp(filename{1}); % So I can remind myself what I'm analyzing.
-    n = inputdlg({'Input new filename'},'Save As',1,{Pname});
-    
-end
-
 % Generate new folder for plots and results
 n = n{1};
 newdir = fullfile(pathstr,n);
@@ -252,8 +187,6 @@ end
 
 if analysislogic > 1
 [Temps, CaResponse, Results] = Quantifications (Temps,CaResponse, Stim, time,n);
-else
-    Results = [];
 end
 
 
@@ -266,7 +199,6 @@ end
 if plotlogic > 0
     Plots(Temps, CaResponse,Stim, UIDs, n, numfiles, time);
 end
-
 
     % Save Processed Traces
     V = array2table(CaResponse.full, 'VariableNames',UIDs);
