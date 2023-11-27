@@ -18,8 +18,6 @@ global assaytype
 global plteach
 global pltheat
 global pltmulti
-global plttvr
-global pltadapt
 
 %% Plot Individual Traces
 plotflag = 1 ;
@@ -39,24 +37,6 @@ if numfiles > 1
     % Multiple line plot
     if pltmulti == 1
         MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n, Results.out);
-    end
-    
-     % Adaptation line plot zoomed on 
-     % This data needs to be normalized correctly
-    if pltadapt == 1
-        if assaytype ~= 2
-        MakeTheMultipleLinePlot(CaResponse.Tmax_adjusted, ...
-            mean(Temps.Tmax,2,'omitnan'), ...
-            std(Temps.Tmax,[],2,'omitnan'), ...
-            strcat(n, '_TmaxZoom'), find(mean(Temps.Tmax,2,'omitnan') >= Stim.max, 1, 'first'), ...
-            find(mean(Temps.Tmax,2,'omitnan') >= Stim.max, 1, 'first')+60);
-        else
-            MakeTheMultipleLinePlot(CaResponse.Tmin_adjusted, ...
-            mean(Temps.Tmin,2,'omitnan'), ...
-            std(Temps.Tmin,[],2,'omitnan'), ...
-            strcat(n, '_TminZoom'), find(mean(Temps.Tmin,2,'omitnan') <= Stim.min+0.1, 1, 'first'),...
-            find(mean(Temps.Tmin,2,'omitnan') <= Stim.min+0.1, 1, 'first')+60);
-        end
     end
         
     % Normalize traces to the maximum calcium
@@ -114,22 +94,6 @@ if numfiles > 1
         end
         close all
         
-    end
-    
-    
-    if assaytype == 1
-        if plttvr == 1
-            MakeTheTempVResponsePlot(Temps.AtTh, CaResponse.AtTh, Temps.AboveTh, CaResponse.AboveTh, n, Stim,{'AtTh';'AboveTh'});
-            end
-        
-    elseif assaytype == 2
-        if plttvr == 1
-            MakeTheTempVResponsePlot(Temps.BelowTh, CaResponse.BelowTh, [], [], n, Stim,{'BelowTh',''});
-        end
-    elseif assaytype == 3
-        if plttvr == 1
-            MakeTheTempVResponsePlot(Temps.AtTh, CaResponse.AtTh, Temps.AboveTh, CaResponse.AboveTh, n, Stim,{'AtTh';'AboveTh'});
-        end
     end
 end
 end

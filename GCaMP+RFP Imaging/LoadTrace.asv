@@ -1,4 +1,4 @@
-function [subset_cAD,subset_temp, full_cAD, full_temp, prestim_cAD, prestim_temp, complete_cAD, complete_temp] = LoadTrace(filename, fulltemp, Stim, time)
+function [subset_cAD,full_cAD, prestim_cAD, complete_cAD, subset_temp, full_temp, prestim_temp,complete_temp] = LoadTrace(filename, fulltemp, Stim, time)
 %% LoadTrace
 %   Loads a single simultaneous GCaMP + RFP trace
 %   [subset_cAD,subset_temp, full_cAD, full_temp] = LoadTrace(filename, tempname, fulltemp, Stim, time)
@@ -58,7 +58,7 @@ S = withtol(imagingdate,days(1));
 sub_templog = templog(S,:);
 
 else
-sub_templog = timetable(imagingdata.timestamps, linspace(0,1,length(GFP_RFP_ratio))'); %Make up a temperature log for plotting
+sub_templog = timetable(imagingdata.timestamps, NaN(length(GFP_RFP_ratio), 1)); %Make a blank temperature log for plotting
 
 end
 %% Compress Data for easy plotting
@@ -78,7 +78,7 @@ if isempty(AlignedData)
 end
 
 %% Calculate baseline, defined as time spent at a stated F0 temp + 0.4/ - 0.6 (.2 is the fudge factor on the ATEC machine, going lower on the cooler side in case things are overshot. This is currently a hack think about it a bit more)
-dblAlignedData = AlignedData.Variables;
+
 if ~isempty(fulltemp)
 
 IND=find(dblAlignedData(:,6)<=(Stim.F0+.4) & dblAlignedData(:,6)>=(Stim.F0-0.6));
@@ -130,7 +130,6 @@ complete_cAD = correctedAlignedData;
 complete_temp = dblAlignedData(:,6);
 else
     subset_cAD = dblAlignedData(:,1);
-    subset_temp = dblAlignedData(:,6);
     full_cAD = dblAlignedData(:,1);
-    full_temp = dblAlignedData(:,6);
+    complete_cAD = dblAlignedData(:,1);
 end

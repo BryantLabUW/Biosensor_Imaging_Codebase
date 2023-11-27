@@ -2,7 +2,8 @@ function [Temps, CaResponse] = TGRI_Primary ()
 %% TGRI_Primary processes simultaneous GCaMP + RFP calcium responses to a variety of thermotaxis ramps
 %   [] = TGRI_Primary()
 %
-%   Version 1.0 Version Date: 07-24-23
+%   Version 1.0
+%   Version Date: 07-24-23
 
 clear all
 close all
@@ -29,7 +30,55 @@ else
 end
 
 %% Gather Stimulus Protocol Specific Parameters
-%[Stim, time, Pname] = Params ();
+[Stim, time, Pname] = Params ();
+
+%% Ask which plots to generate
+global plotlogic
+global analysislogic
+global plteach
+global pltheat
+global pltmulti
+global plttvr
+global pltadapt
+global templost
+
+plottypes = {'Individual Traces', 'Heatmap', 'Multiple Lines', 'None', 'Plots Only'};
+[answer, OK] = listdlg('PromptString','Pick plots to generate', ...
+    'ListString', plottypes, 'ListSize', [160 160], ...
+    'InitialValue', [1 5]);
+answer = plottypes(answer);
+if any(contains(answer, 'None'))
+    plotlogic = 0;
+else
+    plotlogic = 1;
+end
+
+if any(contains(answer, 'Plots Only'))
+    analysislogic = 0;
+else
+    analysislogic = 1;
+end
+
+if any(contains(answer, 'Individual Traces'))
+    plteach = 1;
+else
+    plteach = 0;
+end
+
+if any(contains(answer, 'Heatmap'))
+    
+    pltheat = 1;
+else
+    pltheat = 0;
+end
+
+
+if any(contains(answer, 'Multiple Lines'))
+    pltmulti = 1;
+else
+    pltmulti = 0;
+end
+
 
 %% Load and Process Data in .mat format
 if endsWith(filename,'mat')
@@ -75,7 +124,7 @@ if isempty(preprocessed) || preprocessed == 0
     fulltemp = readtable(tempname,opts);
     disp('...done');
     end
-    % Import calcium responses
+    % Import calcium responses 
     for i=1:numfiles
         [~, UIDs{i}, ~] = fileparts(filename{i});
 
@@ -126,61 +175,6 @@ if isempty(preprocessed) || preprocessed == 0
     
 end
 
-%% Ask which plots to generate
-global plotlogic
-global analysislogic
-global plteach
-global pltheat
-global pltmulti
-global plttvr
-global pltadapt
-global templost
-
-if templost < 1
-plottypes = {'Individual Traces', 'Heatmap', 'Multiple Lines', 'None', 'Plots Only'};
-[answer, OK] = listdlg('PromptString','Pick plots to generate', ...
-    'ListString', plottypes, 'ListSize', [160 160], ...
-    'InitialValue', [1 5]);
-answer = plottypes(answer);
-if any(contains(answer, 'None'))
-    plotlogic = 0;
-else
-    plotlogic = 1;
-end
-
-if any(contains(answer, 'Plots Only'))
-    analysislogic = 0;
-else
-    analysislogic = 1;
-end
-
-if any(contains(answer, 'Individual Traces'))
-    plteach = 1;
-else
-    plteach = 0;
-end
-
-if any(contains(answer, 'Heatmap'))
-    
-    pltheat = 1;
-else
-    pltheat = 0;
-end
-
-if any(contains(answer, 'Multiple Lines'))
-    pltmulti = 1;
-else
-    pltmulti = 0;
-end
-else
-    plotlogic = 1;
-    analysislogic = 0;
-    plteach = 1;
-    pltheat = 0;
-    pltmulti = 0;
-end
-
-
 % Generate new folder for plots and results
 n = n{1};
 newdir = fullfile(pathstr,n);
@@ -189,11 +183,8 @@ if exist(newdir,'dir') == 0
 end
 
 %% Quantifications
-if analysislogic > 1
+if 
 [Temps, CaResponse, Results] = Quantifications (Temps,CaResponse, Stim, time,n);
-else
-    Results = [];
-end
 
 %% Save Batch Data
 if numfiles >1
@@ -206,8 +197,8 @@ if plotlogic > 0
 end
 
 %% Save Data
+nAdaptbins = size(Results.AdaptBins,1);
 if analysislogic == 1
-    nAdaptbins = size(Results.AdaptBins,1);
     global assaytype
     if assaytype ~= 2
         headers={'UIDs', 'Tstar', 'Maximal_Temp', ...
