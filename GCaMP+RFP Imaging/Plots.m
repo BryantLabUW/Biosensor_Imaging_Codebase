@@ -1,4 +1,4 @@
-function [] = Plots(Temps, CaResponse, Stim, UIDs, n, numfiles, Results, time)
+function [] = Plots(Temps, CaResponse, Stim, UIDs, n, numfiles, time)
 %% TCI_Plots
 %   Generates and saves plots of Fluorescent Thermal Imaging
 %   TCI_Plots(Temps, CaResponse, Stim, UIDs, n, numfiles, Results, time)
@@ -36,33 +36,19 @@ if numfiles > 1
     
     % Multiple line plot
     if pltmulti == 1
-        MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n, Results.out);
+
+        MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n);
+
     end
         
     % Normalize traces to the maximum calcium
     % response amongst all traces.
-    % Used for % Correlation plots and Heatmap with normalized data
+    % Used for Heatmap with normalized data
     
-    CaResponse.norm = CaResponse.subset/max(max(CaResponse.subset));
+    CaResponse.norm = CaResponse.full/max(max(CaResponse.full));
+    CaResponse.heat = CaResponse.norm;
+    Temps.heat = Temps.full;
     
-    if assaytype ~= 2
-        CaResponse.heat = CaResponse.norm;
-        Temps.heat = Temps.subset;
-    else
-        
-        % Align the full and subset traces
-        for i = 1:numfiles
-            [~, ia, ~] = intersect(CaResponse.full(:,i), CaResponse.subset(:,i), 'stable');
-            time_adjustment_index(i) = ia(1) - 1;
-        end
-        CaResponse.heat = arrayfun(@(x)(CaResponse.full(time_adjustment_index(x):time_adjustment_index(x)+time.pad(4), x)), [1:numfiles], 'UniformOutput', false);
-        CaResponse.heat = cell2mat(CaResponse.heat);
-        CaResponse.heat =CaResponse.heat/max(max(CaResponse.heat));
-        
-        Temps.heat = arrayfun(@(x)(Temps.full(time_adjustment_index(x):time_adjustment_index(x)+time.pad(4), x)), [1:numfiles], 'UniformOutput', false);
-        Temps.heat = cell2mat(Temps.heat);
-    end
- 
     if pltheat == 1
         setaxes = 1;
         while setaxes>0 % loop through the axes selection until you're happy

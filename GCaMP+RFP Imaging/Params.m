@@ -13,7 +13,7 @@ global assaytype
 if ~exist('answer')
     [answer, ok] = listdlg('PromptString','Which stimulus was applied during these recordings?',...
         'SelectionMode','single',...
-        'ListString',{'Heating (20->18->25->20)'}, ...
+        'ListString',{'Liza (20->18->25->20)'}, ...
         'InitialValue', [1]);
     
     if ok<1
@@ -23,8 +23,8 @@ end
 
 % Handle response
 switch answer
-    case 1
-        assaytype = 1; % Positive Thermotaxis
+        case 1 % Liza (20->18->25->20)
+        assaytype = 1; % Positive thermotaxis
         Stim.min = 18;
         Stim.max = 25;
         Stim.F0 = 18;
@@ -38,4 +38,5 @@ switch answer
         time.pad = [60; 0 ; 120; 1060]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
         Pname = 'Liza';
         
+
 end

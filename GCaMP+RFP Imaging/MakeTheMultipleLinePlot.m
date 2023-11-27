@@ -1,5 +1,5 @@
-function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, n, varargin)
-% varargin = x axis locations to draw vertical lines
+function []= MakeTheMultipleLinePlot(Ca, avg_Tmp,  err_Tmp, n)
+
 global newdir
 
 C=cbrewer('qual', 'Dark2', 7, 'PCHIP');
@@ -8,10 +8,6 @@ fig = figure;
 ax.up = subplot(3,1,[1:2]);
 
 hold on;
-
-for k = 1:length(varargin)
-    xline(varargin{k},'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
-end
 
 plot([1:size(Ca,1)],Ca, 'LineWidth', 1);
 plot([1:size(Ca,1)],median(Ca,2, 'omitnan'),'LineWidth', 2, 'Color', 'k');
@@ -28,10 +24,6 @@ ax.dwn = subplot(3,1,3);
 shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'k',0);
 set(gca,'xtickMode', 'auto');
 hold on; 
-
-for k = 1:length(varargin)
-    xline(varargin{k},'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
-end
 
 hold off;
 ylim([10, 41]);
