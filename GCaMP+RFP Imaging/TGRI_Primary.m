@@ -1,12 +1,10 @@
 function [Temps, CaResponse] = TGRI_Primary ()
 %% TGRI_Primary processes simultaneous GCaMP + RFP calcium responses to a variety of thermotaxis ramps
-%   [] = TGRI_Primary()
-%   This is a stripped down version for plotting and extracting aligned
-%   temperature and imaging data
+%   [] = TGRI_Primary() This is a stripped down version for plotting and
+%   extracting aligned temperature and imaging data
 %
 
-%   Version 2.0
-%   Version Date: 08-10-23
+%   Version 2.0 Version Date: 08-10-23
 
 
 clear all
@@ -17,7 +15,7 @@ warning('off','all'); % Don't display warnings
 global pathstr
 global preprocessed
 global newdir
-
+global templost
 
 [name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','/Users/astrasb/Box/Lab_Hallem/Astra/Writing/Bryant et al 20xx/Data/Calcium Imaging','Multiselect','on');
 
@@ -42,8 +40,7 @@ if endsWith(filename,'mat')
     load(filename{1});
     numfiles = size(CaResponse.subset,2);
     preprocessed = 1;
-    n = regexp(name,'_data','split');
-    
+    n = regexp(name,'_data','split');   
 end
 
 %% Check if for Stimulus Protocol Parameters, load if necessary
@@ -70,15 +67,14 @@ if isempty(preprocessed) || preprocessed == 0
     else
             templost = 0;
     end
-    if templost<0
-    tempname = fullfile(tempp, tempn);
-    
-    % Import Temperature Log
-    opts = detectImportOptions(tempname);
-    opts = setvartype(opts,{'Var1','Var2'},'datetime');
-    disp('Importing temperature log...');
-    fulltemp = readtable(tempname,opts);
-    disp('...done');
+    if templost < 1
+        tempname = fullfile(tempp, tempn);
+        % Import Temperature Log
+        opts = detectImportOptions(tempname);
+        opts = setvartype(opts,{'Var1','Var2'},'datetime');
+        disp('Importing temperature log...');
+        fulltemp = readtable(tempname,opts);
+        disp('...done');
     end
     % Import calcium responses
     for i=1:numfiles
@@ -91,6 +87,7 @@ if isempty(preprocessed) || preprocessed == 0
             [temp.full(:,1), temp.full(:,2)] = LoadTrace(filename{i}, [] , Stim, time);
 
         end
+    
     % Process calcium traces
     if templost < 1
         sz.full = size(temp.full,1);
@@ -110,6 +107,7 @@ if isempty(preprocessed) || preprocessed == 0
     else
         Temps.full(1:sz.full,i) = temp.full(:,2);
     end
+end
     clear temp
     % Assign a filename
     disp(filename{1}); % So I can remind myself what I'm analyzing.
@@ -123,10 +121,6 @@ global analysislogic
 global plteach
 global pltheat
 global pltmulti
-global plttvr
-global pltadapt
-global templost
-
 
 if templost < 1
 plottypes = {'Individual Traces', 'Heatmap', 'Multiple Lines'};
