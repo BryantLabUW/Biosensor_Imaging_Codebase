@@ -70,8 +70,7 @@ while setaxes>0 % loop through the axes selection until you're happy
     end
 end
 
-saveas(gcf, fullfile(newdir,['/', n, '-multiplot.jpeg']),'jpeg');
-saveas(gcf, fullfile(newdir,['/', n, '-multiplot.eps']),'epsc');
+exportgraphics(gcf, fullfile(newdir,['/', n, '-multiplot.pdf']),'ContentType','vector');
 
 close all
 end

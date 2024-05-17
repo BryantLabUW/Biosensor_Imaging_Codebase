@@ -63,7 +63,6 @@ if plotflag > 0
     end
 end
 
-saveas(gcf, fullfile(newdir,['/',name, '.eps']),'epsc');
-saveas(gcf, fullfile(newdir,['/',name, '.jpeg']),'jpeg');
+exportgraphics(gcf, fullfile(newdir,['/', name, '.pdf']),'ContentType','vector');
 
 end

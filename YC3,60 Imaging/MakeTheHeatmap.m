@@ -37,8 +37,7 @@ title(currentFigure.Children(end), strcat(n,'_Heatmap'),'Interpreter','none');
 
 movegui('northeast');
 
-saveas(gcf, fullfile(newdir,['/', n, '-heatmap.eps']),'epsc');
-saveas(gcf, fullfile(newdir,['/', n, '-heatmap.jpeg']),'jpeg');
+exportgraphics(gcf, fullfile(newdir,['/', n, '-heatmap.pdf']),'ContentType','vector');
 
 close all
 end

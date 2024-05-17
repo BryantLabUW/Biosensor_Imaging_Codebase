@@ -70,9 +70,7 @@ while setaxes>0 % loop through the axes selection until you're happy
             setaxes=-1;
     end
 end
-
-saveas(gcf, fullfile(newdir,['/', n, '-categoricalplot_g2.jpeg']),'jpeg');
-saveas(gcf, fullfile(newdir,['/', n, '-categoricalplot_g2.eps']),'epsc');
+exportgraphics(gcf, fullfile(newdir,['/', n, '-categoricalplot_g2.pdf']),'ContentType','vector');
 
 close all
 end
