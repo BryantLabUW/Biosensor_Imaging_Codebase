@@ -13,7 +13,7 @@ global assaytype
 if ~exist('answer')
     [answer, ok] = listdlg('PromptString','Which stimulus was applied during these recordings?',...
         'SelectionMode','single',...
-        'ListString',{'Rapid Heating (23->17->40->23)';  'Cooling Ramp (23->22->13->23)'; 'Heating (23->20->34->23)'; 'Heating PT15 (15->12->26->15)';'Heating Extended (23->20->40->23)'; 'Heating PT15 extended (15->12->32->15)'; 'UTurn (15->22->15)'}, ...
+        'ListString',{'Rapid Heating (23->17->40->23)';  'Cooling Ramp (23->22->13->23)'; 'Heating (23->20->34->23)'; 'Heating PT15 (15->12->26->15)';'Heating Extended (23->20->40->23)'; 'Heating PT15 extended (15->12->32->15)'; 'UTurn (15->22->15)'; '17 to 37 (20->17->37->20)'},...
         'InitialValue', [3]);
     
     if ok<1
@@ -97,7 +97,7 @@ case 2 % Cooling Ramp (22 -> 13C @ 0.1C/s)
         time.stimdur = 880; % duration (in sec) from start of F0 to end of upwards ramp
         time.rampspeed = 0.025; % rate of temperature change during primary phase, in degrees per second
         time.pad = [60; 0 ; 120; 1060]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
-        Pname = 'pF PT extended';
+        Pname = '20 to 40C';
         
          case 6 % Heating Extended PT15 (12 -> 32C @0.025C/s) Tambient = 15
         assaytype = 3; %Positive Thermotaxis, Tambient = 15
@@ -128,4 +128,20 @@ case 2 % Cooling Ramp (22 -> 13C @ 0.1C/s)
         time.rampspeed = 0.025; % rate of temperature change during primary phase, in degrees per second
         time.pad = [0; 0 ; 0; 900]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
         Pname = 'U-Turn';
+
+        case 8 % Heating Extended (17 -> 37C @0.025C/s)
+        assaytype = 1; % Positive Thermotaxis
+        Stim.min = 17;
+        Stim.max = 27;
+        Stim.F0 = 17;
+        Stim.holding = 20;
+        Stim.NearTh = [17; 23];
+        Stim.AboveTh = [23];
+        Stim.Analysis = [32; 34];
+        time.soak = 120; % duration (sec) of soak time at coolest point in thermal stimulus; indicates amount of time to wait before gathering data for export
+        time.stimdur = 880; % duration (in sec) from start of F0 to end of upwards ramp
+        time.rampspeed = 0.025; % rate of temperature change during primary phase, in degrees per second
+        time.pad = [60; 0 ; 120; 1060]; % start/end times of standardized "full" range for export; if Stim.min == Stim.F0, first 2 values should be 0,0
+        Pname = '17 to 37C';
+
 end

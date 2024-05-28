@@ -23,7 +23,9 @@ roi2.YFP = fulltable{3:2:end,5};
 CFP = (roi1.CFP-roi2.CFP);
 YFP = (roi1.YFP-roi2.YFP);
 
-YFPadjust = YFP - (1.132*CFP); % Conversion factor calculated by ASB on 10-10-19
+%YFPadjust = YFP - (1.132*CFP); % Conversion factor calculated by ASB on
+%10-10-19 at UCLA
+YFPadjust = YFP - (1.073984*CFP); % Conversion factor calculated by ASB on 06-14-23 at UW
 YFP_CFP_ratio =  YFPadjust./CFP;
 
 imagetime = fulltable{2:2:end,6};

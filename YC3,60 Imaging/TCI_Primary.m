@@ -12,7 +12,7 @@ global preprocessed
 global newdir
 
 
-[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','/Users/astrasb/Box/Lab_Hallem/Astra/Writing/Bryant et al 20xx/Data/Calcium Imaging','Multiselect','on');
+[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','D:\Bryant_Lab','Multiselect','on');
 
 if isequal(name,0)
     error('User canceled analysis session');
