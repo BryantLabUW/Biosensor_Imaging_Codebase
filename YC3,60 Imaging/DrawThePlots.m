@@ -1,8 +1,11 @@
-function [] = DrawThePlots(T, Ca, name)
+function [] = DrawThePlots(T, Ca, name, varargin)
+% varargin = x axis locations to draw vertical lines
 global pathstr
 global assaytype
 global newdir
 global plotflag
+
+
 
 %% Draw a figure where the calcium trace is a black line
 fig=figure;
@@ -10,7 +13,14 @@ movegui('northeast');
 
 % plot Calcium Trace
 ax.up = subplot(3,1,[1:2]);
+hold on
+% Validate input arguments
+for k = 1:length(varargin)
+    xline(varargin{k},'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+end
+
 plot(Ca,'k');
+hold off
 xlim([0, round(size(Ca,1),-1)]);
 ylim([floor(min(Ca)),ceil(max(Ca))]);
 ylabel('dR/R0 (%)');

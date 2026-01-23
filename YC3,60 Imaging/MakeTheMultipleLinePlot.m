@@ -8,7 +8,7 @@ fig = figure;
 ax.up = subplot(3,1,[1:2]);
 
 hold on;
-
+%This will add a vertical line at the average T*
 for k = 1:length(varargin)
     xline(varargin{k},'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
 end
@@ -29,6 +29,7 @@ shadedErrorBar([1:size(avg_Tmp,1)],avg_Tmp,err_Tmp,'k',0);
 set(gca,'xtickMode', 'auto');
 hold on; 
 
+%This will add a vertical line at the average T*
 for k = 1:length(varargin)
     xline(varargin{k},'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
 end

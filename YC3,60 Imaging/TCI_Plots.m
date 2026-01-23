@@ -25,7 +25,7 @@ global pltadapt
 plotflag = 1 ;
 if plteach == 1
     for i = 1:numfiles
-        DrawThePlots(Temps.full(:,i), CaResponse.full(:,i), UIDs{i});
+        DrawThePlots(Temps.full(:,i), CaResponse.full(:,i), UIDs{i}, Results.out(i));
     end
 end
 set(0,'DefaultFigureVisible','on');

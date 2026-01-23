@@ -6,22 +6,68 @@ function [full_cAD, full_temp, raw_cAD, raw_temp] = LoadTrace_RCaMP(filename, fu
 %   Version 1.0
 %   Version Date: 07-24-23
 
-warning('off','all'); % Don't display warnings
+
+global indicator
+
 [~, UID, ~] = fileparts(filename);
-
-%% Load Simultaneous GFP and RFP Imaging from a single .csv file
 fulltable = readtable(filename);
-warning('on','all'); % Display warnings
 
-% Parse datafile to separate the RFP and GFP signals from RO1 1 and ROI 2.
-roi1.GFP = fulltable{2:2:end,4};
-roi1.RFP = fulltable{2:2:end,5};
 
-roi2.GFP = fulltable{3:2:end,4};
-roi2.RFP = fulltable{3:2:end,5};
 
-GFP = (roi1.GFP-roi2.GFP);
-RFP = (roi1.RFP-roi2.RFP);
+% Have user specify which indicator, then parse datafile to separate the appropriate signals.
+
+if ~exist('tmp')
+    [tmp, ok] = listdlg('PromptString','Which indicator are you using?',...
+        'SelectionMode','single',...
+        'ListString',{'YC3.60','GCaMP + RFP', 'GCaMP only', ...
+        'RCaMP + GFP', 'RCaMP only', 'FlincG3'}, ...
+        'InitialValue', [1]);
+    
+    if ok<1
+        error('User canceled analysis session');
+    end
+switch tmp
+    case 1 % YC3.60
+        ch1 = 4;
+        ch2 = 5;
+    case 2 % GCaMP + RFP
+        ch1 = 4;
+        ch2 = 5;
+    case 3 % GCaMP only
+        ch1 = 4;
+    case 4 % RCaMP + GFP
+        ch1 = 5;
+        ch2 = 4;
+    case 5 % RCaMP only
+        ch1 = 4;
+    case 6 % FlincG3
+        ch1 = 4;
+end
+end
+
+
+%% Load Dual Channel or Single Channel Imaging Data
+if ismember(tmp, [1, 2, 4])
+    % Dual Channel
+    roi1.ch1 = fulltable{2:2:end,ch1};
+    roi1.ch2 = fulltable{2:2:end,ch2};
+
+    roi2.ch1 = fulltable{3:2:end,ch1};
+    roi2.ch2 = fulltable{3:2:end,ch2};
+
+    Channel1 = (roi1.ch1-roi2.ch1);
+    Channel2 = (roi1.ch2-roi2.ch2);
+
+    Ch_ratio = Channel1./Channel2;
+else 
+    % Single Channel 
+    roi1.ch1 = fulltable{2:2:end,ch1};
+    roi2.ch1 = fulltable{3:2:end,ch1};
+
+    Channel1 = (roi1.ch1-roi2.ch1);
+    Ch_ratio = Channel1
+
+end
 
 % RFP_GFP_ratio =  RFP./GFP;
 
