@@ -167,7 +167,7 @@ for i = 1:n_expt
     time_adjustment_index(i) = ia(1) - 1;
 end
 
-Results.out = median((plot_outt + time_adjustment_index), 'omitnan');
+Results.out = (plot_outt + time_adjustment_index);
 
 %% Calculate temperature that elicits maximal response
 [m, I] = max(CaResponse.subset,[],1,'linear');
@@ -211,7 +211,7 @@ for i = 1:n_expt
     % section for normalization relative to Tambient.
     
     if assaytype ~=2
-        temp = (CaResponse.full(find(Temps.full(:,i)>=Stim.max, 1,'first'):find(Temps.full(:,i)>=Stim.max-0.1, 1,'last'),i));
+        temp = (CaResponse.full(find(Temps.full(:,i)>=Stim.max-0.1, 1,'first'):find(Temps.full(:,i)>=Stim.max-0.1, 1,'last'),i));
         Results.AdaptBins(1,i) = median(temp(1:15));
         Results.AdaptBins(2,i) = median(temp(61:75));
     else

@@ -11,12 +11,20 @@ global pathstr
 global preprocessed
 global newdir
 
+% Saving the last filepath for ease.
+persistent lastPath
+if isempty(lastPath)
+        lastPath = pwd;
+end
 
-[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','D:\Bryant_Lab','Multiselect','on');
+[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data',lastPath,'Multiselect','on');
 
 if isequal(name,0)
     error('User canceled analysis session');
 end
+
+% Update persistent variable with the new path
+lastPath = pathstr;
 
 if ischar(name)
     numfiles = 1;
