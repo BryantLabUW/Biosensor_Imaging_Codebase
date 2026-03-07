@@ -1,17 +1,9 @@
 function [] = Plots(Temps, CaResponse, UIDs, n, numfiles)
-%% TCI_Plots
+%% Plots
 %   Generates and saves plots of Fluorescent Thermal Imaging
-%   TCI_Plots(Temps, CaResponse, UIDs, n, numfiles)
+%   Plots(Temps, CaResponse, UIDs, n, numfiles)
 %
-%   Version 2.0
-%   Version Date: 3-18-22
-%
-%% Revision History
-%   3-31-20:    Forked from older version by ASB
-%   2021_01_27  Changed heatmap such that the heamtap rows (individual
-%               traces) are now ordered using average linkage distance.
-%               Also changed the inputs to the heatmap so that the traces
-%               are normalized to the maximum Ca2+ response for the group.
+%   
 
 global plotflag
 global plteach

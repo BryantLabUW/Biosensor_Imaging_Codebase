@@ -1,15 +1,17 @@
-function [] = QuickPlot()
-% QuickPlot - Plot calcium imaging and temperature data without
-% sophisticated analysis
+function [] = TCI_QuickPlot(filename, tempname, plotTitle)
+% TCI_QuickPlot - Plot calcium imaging and temperature data without
+% sophisticated analysis or
 %
 % This function loads and plots raw calcium imaging data and temperature logs
-% without using the binned parameters from Params.
+% without using the binned parameters from TCI_Params.
 %
 % Inputs:
 %   filename - Path to .csv file containing calcium imaging data
 %   tempname - Path to .dat file containing temperature log
 %   plotTitle - (Optional) Title for the plot
 %
+% Example:
+%   PlotRawCalciumTemp('path/to/imaging.csv', 'path/to/templog.dat', 'Neuron Response')
 
 %% Select then import calcium imaging file
 [name, pathstr] = uigetfile2({'*.csv'},'Select imaging data');
@@ -19,63 +21,22 @@ if isequal(name,0)
     error('User canceled analysis session');
 end
 
-global indicator
-
-% Have user specify which indicator, then parse datafile to separate the appropriate signals.
-if ~exist('tmp')
-    [tmp, ok] = listdlg('PromptString','Which indicator are you using?',...
-        'SelectionMode','single',...
-        'ListString',{'YC3.60','GCaMP + RFP', 'GCaMP only', ...
-        'RCaMP + GFP', 'RCaMP only', 'FlincG3'}, ...
-        'InitialValue', [1]);
-    if ok<1
-        error('User canceled analysis session');
-    end
-    switch tmp
-        case 1 % YC3.60
-            ch1 = 4;
-            ch2 = 5;
-        case 2 % GCaMP + RFP
-            ch1 = 4;
-            ch2 = 5;
-        case 3 % GCaMP only
-            ch1 = 4;
-        case 4 % RCaMP + GFP
-            ch1 = 5;
-            ch2 = 4;
-        case 5 % RCaMP only
-            ch1 = 4;
-        case 6 % FlincG3
-            ch1 = 4;
-    end
-end
-
 % Import calcium imaging data
 fulltable = readtable(filename);
 
-%% Load Dual Channel or Single Channel Imaging Data
-    if ismember(tmp, [1, 2, 4])
-        % Dual Channel
-        roi1.ch1 = fulltable{2:2:end,ch1};
-        roi1.ch2 = fulltable{2:2:end,ch2};
+% Parse datafile to separate the CFP and YFP signals from ROI 1 and ROI 2
+roi1.CFP = fulltable{2:2:end, 4};
+roi1.YFP = fulltable{2:2:end, 5};
+roi2.CFP = fulltable{3:2:end, 4};
+roi2.YFP = fulltable{3:2:end, 5};
 
-        roi2.ch1 = fulltable{3:2:end,ch1};
-        roi2.ch2 = fulltable{3:2:end,ch2};
+% Calculate background-subtracted signals
+CFP = (roi1.CFP - roi2.CFP);
+YFP = (roi1.YFP - roi2.YFP);
 
-        Channel1 = (roi1.ch1-roi2.ch1);
-        Channel2 = (roi1.ch2-roi2.ch2);
-
-        Ch_ratio = Channel1./Channel2;
-    else
-        % Single Channel
-        roi1.ch1 = fulltable{2:2:end,ch1};
-        roi2.ch1 = fulltable{3:2:end,ch1};
-
-        Channel1 = (roi1.ch1-roi2.ch1);
-        Ch_ratio = Channel1;
-
-    end
-
+% Apply bleedthrough correction and calculate ratio
+YFPadjust = YFP - (1.132 * CFP); % Conversion factor as used in TCI_LoadTrace
+YFP_CFP_ratio = YFPadjust ./ CFP;
 
 % Get timestamps from imaging data
 imagetime = fulltable{2:2:end, 6};
@@ -106,7 +67,7 @@ else
 end
 
 % Create timetables for synchronization
-imagingdata=timetable(timestamps,Ch_ratio);
+imagingdata = timetable(timestamps, YFP_CFP_ratio, CFP, YFPadjust);
 templog = timetable(mydatetime, fulltemp{:, 4});
 
 % Subsetting templog to match imaging date
@@ -130,14 +91,10 @@ end
 
 % Extract aligned data
 dblAlignedData = AlignedData.Variables;
-Ca_raw = dblAlignedData(:, 1);
-Temp_raw = dblAlignedData(:, 6);
+CFP_raw = dblAlignedData(:, 2);
+YFP_raw = dblAlignedData(:, 3);
+Temp_raw = dblAlignedData(:, 4);
 
-% Calculate baseline using mean of the entire trace
-baselinecorrection = mean(Ca_raw);
-
-% Apply baseline correction
-correctedCa = ((Ca_raw - baselinecorrection) / baselinecorrection) * 100;
 
 % Create figure
 fig = figure;
@@ -145,11 +102,11 @@ movegui('northeast');
 
 % Plot Neural Trace
 ax.up = subplot(3, 1, [1:2]);
-plot(correctedCa, 'k');
-xlim([0, length(correctedCa)]);
-ylim([floor(min(correctedCa)), ceil(max(correctedCa))]);
-ylabel('dR/R0 (%)');
-title([name, ' - Minimally Processed Calcium Response'], 'Interpreter', 'none');
+plot(CFP_raw, 'Color', '#00CC99');
+hold on
+plot(YFP_raw, 'Color', '#CC9900');
+ylabel('Raw Fluorescence');
+title([name, ' - Unprocessed Processed Calcium Response'], 'Interpreter', 'none');
 
 % Plot Temperature trace
 ax.dwn = subplot(3, 1, 3);
@@ -199,9 +156,6 @@ end
 
 exportgraphics(gcf, fullfile(newdir, [name, '_raw.pdf']), 'ContentType', 'vector');
 
-% Save data to Excel file
-T = table((1:length(correctedCa))', correctedCa, Temp_raw, 'VariableNames', {'Time_s', 'dR_R0_percent', 'Temperature_C'});
-writetable(T, fullfile(newdir, [name, '_raw_data.xlsx']));
 
-disp(['Plot and data saved to ' newdir]);
+disp(['Plot saved to ' newdir]);
 end

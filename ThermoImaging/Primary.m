@@ -8,6 +8,12 @@ function [Temps, CaResponse] = Primary ()
 clear all; close all;
 warning('off','all'); % Don't display warnings
 
+% Saving the last filepath for ease.
+persistent lastPath
+if isempty(lastPath)
+        lastPath = pwd;
+end
+
 %% Select .csv file(s) or .mat file containing imaging data
 global pathstr
 global preprocessed
@@ -15,11 +21,14 @@ global newdir
 global plots
 
 
-[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data','/Users/astrasb/Box/Lab_Hallem/Astra/Writing/Bryant et al 20xx/Data/Calcium Imaging','Multiselect','on');
+[name, pathstr] = uigetfile2({'*.csv; *.mat'},'Select imaging data',lastPath,'Multiselect','on');
 
 if isequal(name,0)
     error('User canceled analysis session');
 end
+
+% Update persistent variable with the new path
+lastPath = pathstr;
 
 if ischar(name)
     numfiles = 1;

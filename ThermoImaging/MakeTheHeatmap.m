@@ -39,5 +39,4 @@ movegui('northeast');
 saveas(gcf, fullfile(newdir,['/', n, '-heatmap.eps']),'epsc');
 saveas(gcf, fullfile(newdir,['/', n, '-heatmap.jpeg']),'jpeg');
 
-close all
 end

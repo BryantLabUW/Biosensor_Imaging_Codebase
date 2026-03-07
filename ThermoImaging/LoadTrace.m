@@ -1,11 +1,7 @@
 function [full_cAD, full_temp] = LoadTrace(filename, fulltemp, Stim, time)
 %% LoadTrace
 %   Loads a single imaging trace
-%   [subset_cAD,subset_temp, full_cAD, full_temp] = LoadTrace(filename, tempname, fulltemp, Stim, time)
-%
-%   Version 1.0
-%   Version Date: 07-24-23
-
+%   [full_cAD, full_temp] = LoadTrace(filename, tempname, fulltemp, Stim, time)
 
 global indicator
 
