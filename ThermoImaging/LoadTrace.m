@@ -1,54 +1,45 @@
-function [full_cAD, full_temp] = LoadTrace(filename, fulltemp, Stim, time)
+function [full_cAD, full_temp, UIDs] = LoadTrace(filename, fulltemp, Stim, time)
 %% LoadTrace
 %   Loads a single imaging trace
-%   [full_cAD, full_temp] = LoadTrace(filename, tempname, fulltemp, Stim, time)
+%   [full_cAD, full_temp, UIDs] = LoadTrace(filename, tempname, fulltemp, Stim, time)
 
 global indicator
 
-% Have user specify which indicator, then parse datafile to separate the appropriate signals.
-if ~exist('tmp')
-    [tmp, ok] = listdlg('PromptString','Which indicator are you using?',...
-        'SelectionMode','single',...
-        'ListString',{'YC3.60','GCaMP + RFP', 'GCaMP only', ...
-        'RCaMP + GFP', 'RCaMP only', 'FlincG3'}, ...
-        'InitialValue', [1]);
-    if ok<1
-        error('User canceled analysis session');
-    end
-    switch tmp
-        case 1 % YC3.60
-            ch1 = 4;
-            ch2 = 5;
-        case 2 % GCaMP + RFP
-            ch1 = 4;
-            ch2 = 5;
-        case 3 % GCaMP only
-            ch1 = 4;
-        case 4 % RCaMP + GFP
-            ch1 = 5;
-            ch2 = 4;
-        case 5 % RCaMP only
-            ch1 = 4;
-        case 6 % FlincG3
-            ch1 = 4;
-    end
+%Parse datafile to separate the appropriate signals based on the selected indicator.
+
+switch indicator
+    case 1 % YC3.60
+        ch1 = 4;
+        ch2 = 5;
+    case 2 % GCaMP + RFP
+        ch1 = 4;
+        ch2 = 5;
+    case 3 % GCaMP only
+        ch1 = 4;
+    case 4 % RCaMP + GFP
+        ch1 = 5;
+        ch2 = 4;
+    case 5 % RCaMP only
+        ch1 = 4;
+    case 6 % FlincG3
+        ch1 = 4;
 end
+
 
 numfiles = size(filename,2);
 [~, UIDs, ~]  = arrayfun(@fileparts, filename);
 
-
 allthedata=cellfun(@readtable,filename, 'UniformOutput',false);
+
+%Preallocate sizes for temp and imaging data
 tracelengths= cellfun(@(x)(size(x, 1)), allthedata);
-
 [full_cAD, full_temp] = deal(NaN(max(tracelengths), numfiles));
-
 
 for i=1:numfiles
     fulltable = allthedata{i};
 
     %% Load Dual Channel or Single Channel Imaging Data
-    if ismember(tmp, [1, 2, 4])
+    if ismember(indicator, [1, 2, 4])
         % Dual Channel
         roi1.ch1 = fulltable{2:2:end,ch1};
         roi1.ch2 = fulltable{2:2:end,ch2};
@@ -59,7 +50,11 @@ for i=1:numfiles
         Channel1 = (roi1.ch1-roi2.ch1);
         Channel2 = (roi1.ch2-roi2.ch2);
 
-        Ch_ratio = Channel1./Channel2;
+        if ismember(indicator, 1)
+            Channel2 = Channel2 - (1.132 * Channel1); %  Bleedthrough correction for CFP into YFP channel
+        end
+        Ch_ratio = Channel2./Channel1;
+        
     else
         % Single Channel
         roi1.ch1 = fulltable{2:2:end,ch1};
@@ -94,7 +89,7 @@ for i=1:numfiles
         sub_templog = templog(S,:);
 
     else
-        sub_templog = timetable(imagingdata.timestamps, linspace(0,1,length(GFP_RFP_ratio))'); %Make up a temperature log for plotting
+        sub_templog = timetable(imagingdata.timestamps, linspace(0,1,length(Ch_ratio))'); %Make up a temperature log for plotting
 
     end
     %% Compress Data for easy plotting
@@ -117,7 +112,8 @@ for i=1:numfiles
     dblAlignedData = AlignedData.Variables;
 
     %% Generate variables for saving and export
-    if ~isempty(fulltemp) 
+
+    if ~isempty(fulltemp)
         IND=find(dblAlignedData(:,2)<=(Stim.F0+0.4) & dblAlignedData(:,2)>=(Stim.F0-0.6));
         ibins = [1 ; find(diff(IND)>1); size(IND,1)];
         ibins = ibins(IND(ibins)< (time.soak + time.stimdur)); % solves the problem from the next line down - prestim period should be before the stimulus, not after
@@ -131,16 +127,25 @@ for i=1:numfiles
         if ((indeces(end))-time.soak(1))-time.pad(1)<=0
             temp = correctedAlignedData;
             full_cAD(abs(((indeces(end))-time.soak(1))-time.pad(1))+1:abs(((indeces(end))-time.soak(1))-time.pad(1))+size(temp,1),i)= temp;
-            full_temp(abs(((indeces(end))-time.soak(1))-time.pad(1))+1:abs(((indeces(end))-time.soak(1))-time.pad(1))+size(temp,1),i) = dblAlignedData(:,6);
+            full_temp(abs(((indeces(end))-time.soak(1))-time.pad(1))+1:abs(((indeces(end))-time.soak(1))-time.pad(1))+size(temp,1),i) = dblAlignedData(:,2);
             warning(['Recording ', UIDs{i},' is shorter than expected. It is truncated at the start of the experiment']);
         else
             temp = correctedAlignedData(((indeces(end)-time.soak(1)) - time.pad(1)):end);
             full_cAD(1:size(temp,1),i) = temp;
-            full_temp(1:size(temp,1),i) = dblAlignedData((((indeces(end)-time.soak(1))-time.pad(1)):end),6);
+            full_temp(1:size(temp,1),i) = dblAlignedData((((indeces(end)-time.soak(1))-time.pad(1)):end),2);
         end
     else
         full_cAD(1:length(dblAlignedData),i) = dblAlignedData(:,1);
-        full_temp(1:length(dblAlignedData),i) = dblAlignedData(:,6);
+        full_temp(1:length(dblAlignedData),i) = dblAlignedData(:,2);
 
     end
+
+end
+
+%Trim data arrays to remove any NaN and shorten to match the shortest
+%trace
+tracelength = min(arrayfun(@(col) find(~isnan(full_cAD(:,col)), 1, 'last'), 1:size(full_cAD,2)));
+full_cAD = full_cAD(1:tracelength, :);
+full_temp = full_temp(1:tracelength, :);
+
 end

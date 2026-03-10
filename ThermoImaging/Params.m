@@ -29,7 +29,7 @@ switch answer
         time.stimdur = 880; % duration (in sec) from start of F0 to end of upwards ramp
         time.rampspeed = 0.025; % rate of temperature change during primary phase, in degrees per second
         time.pad = 120; % duration (sec) of prestimulus time to include. 
-        Pname = 'pF PT extended';
+        Pname = '20to40WarmingRamp';
 
    case 2 % Paula (20->15->30->20)
         Stim.F0 = 15;

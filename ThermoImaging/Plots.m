@@ -1,20 +1,16 @@
-function [] = Plots(Temps, CaResponse, UIDs, n, numfiles)
+function [] = Plots(Temps, CaResponse, UIDs, n, numfiles, Results)
 %% Plots
 %   Generates and saves plots of Fluorescent Thermal Imaging
-%   Plots(Temps, CaResponse, UIDs, n, numfiles)
+%   Plots(Temps, CaResponse, UIDs, n, numfiles, Results)
 %
-%   
 
-global plotflag
-global plteach
-global pltheat
-global pltmulti
+global plots
 
 %% Plot Individual Traces
-plotflag = 1 ;
-if plteach == 1
+
+if plots.plteach == 1
     for i = 1:numfiles
-        DrawThePlots(Temps(:,i), CaResponse(:,i), UIDs{i});
+        DrawThePlots(Temps(:,i), CaResponse(:,i), UIDs{i}, Results.out(i));
     end
 end
 set(0,'DefaultFigureVisible','on');
@@ -26,8 +22,8 @@ if numfiles > 1
     sd_Tmp = std(Temps,[],2,'omitnan');
     
     % Multiple line plot
-    if pltmulti == 1
-        MakeTheMultipleLinePlot(CaResponse, avg_Tmp, sd_Tmp, n);
+    if plots.pltmulti == 1
+        MakeTheMultipleLinePlot(CaResponse, avg_Tmp, sd_Tmp, n, median(Results.out, 'omitnan'));
     end
         
     % Normalize traces to the maximum calcium
@@ -35,7 +31,7 @@ if numfiles > 1
     % Used for Heatmap with normalized data
     
 
-    if pltheat == 1
+    if plots.pltheat == 1
         CaResponse_norm = CaResponse/max(max(CaResponse));
         setaxes = 1;
         while setaxes>0 % loop through the axes selection until you're happy

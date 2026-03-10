@@ -1,5 +1,5 @@
 function [] = DrawThePlots(T, Ca, name)
-global pathstr
+
 global newdir
 global plotflag
 
@@ -9,7 +9,16 @@ movegui('northeast');
 
 % plot Calcium Trace
 ax.up = subplot(3,1,[1:2]);
+hold on
+
+% Validate input arguments and plot T* line
+for k = 1:length(varargin)
+    xline(varargin{k},'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
+end
+
 plot(Ca,'k');
+hold off
+
 xlim([0, round(size(Ca,1),-1)]);
 ylim([floor(min(Ca)),ceil(max(Ca))]);
 ylabel('dR/R0 (%)');
@@ -25,7 +34,7 @@ xlabel('Time (seconds)');
 
 % Give the figure a title
 currentFigure = gcf;
-title(currentFigure.Children(end), [strcat('Recording', {' '},suffix,string(name))],'Interpreter','none');
+title(currentFigure.Children(end), [strcat('Recording', {' '},string(name))],'Interpreter','none');
 
 % Adjust axis values for the plot
 if plotflag > 0

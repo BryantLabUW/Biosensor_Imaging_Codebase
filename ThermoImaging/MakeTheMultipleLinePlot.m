@@ -9,6 +9,7 @@ ax.up = subplot(3,1,[1:2]);
 
 hold on;
 
+%This will add a vertical line at the average T*
 for k = 1:length(varargin)
     xline(varargin{k},'LineWidth', 2, 'Color', [0.5 0.5 0.5], 'LineStyle', ':');
 end
@@ -18,8 +19,14 @@ plot([1:size(Ca,1)],median(Ca,2, 'omitnan'),'LineWidth', 2, 'Color', 'k');
 
 hold off;
 
-xlim([0, size(Ca,1)]);
-ylim([-50, 60]);
+%Axis Dimensions
+colMin = arrayfun(@(col) min(Ca(:,col), [], 'omitnan'), 1:size(Ca,2));
+colMax = arrayfun(@(col) max(Ca(:,col), [], 'omitnan'), 1:size(Ca,2));
+yMin = floor(min(colMin)/10)*10;
+yMax = ceil(max(colMax)/10)*10;
+
+xlim([0, round(size(Ca,1),-1)]);
+ylim([yMin, yMax]);
 
 set(gca,'XTickLabel',[]);
 ylabel('dR/R0 (%)');
@@ -34,8 +41,8 @@ for k = 1:length(varargin)
 end
 
 hold off;
+xlim([0, round(size(Ca,1),-1)]);
 ylim([10, 41]);
-xlim([0, size(Ca,1)]);
 ylabel('Temperature (celcius)','Color','k');
 xlabel('Time (seconds)');
 currentFigure = gcf;
