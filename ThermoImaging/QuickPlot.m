@@ -65,7 +65,10 @@ fulltable = readtable(filename);
         Channel1 = (roi1.ch1-roi2.ch1);
         Channel2 = (roi1.ch2-roi2.ch2);
 
-        Ch_ratio = Channel1./Channel2;
+        if ismember(indicator, 1)
+            Channel2 = Channel2 - (1.132 * Channel1); %  Bleedthrough correction for CFP into YFP channel
+        end
+        Ch_ratio = Channel2./Channel1;
     else
         % Single Channel
         roi1.ch1 = fulltable{2:2:end,ch1};

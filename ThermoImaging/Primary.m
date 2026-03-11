@@ -51,9 +51,9 @@ end
 %   Allow the user to select one or more .dat files.
 %   If multiple files are selected, concatenate them and save the result.
 
-[tempn, tempp] = uigetfile('*.dat', ...
+[tempn, tempp] = uigetfile2('*.dat', ...
     'Select temperature file(s) - select multiple to concatenate', ...
-    pathstr, 'MultiSelect', 'on');
+    pathstr, 'Multiselect', 'on');
 
 if isequal(tempn, 0)
     error('User canceled analysis session');
