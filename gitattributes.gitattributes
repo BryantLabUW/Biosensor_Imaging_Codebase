@@ -1,5 +1,0 @@
-# Auto-detect text files and normalize line endings
-* text=auto
-
-# Zeiss ZEN macros - preserve Windows CRLF line endings
-*.czmac text eol=crlf
