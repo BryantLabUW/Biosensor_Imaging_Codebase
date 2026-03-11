@@ -10,6 +10,7 @@ function [Stim, time, Pname] = Params(answer);
 %% Code
 
 global assaytype
+
 if ~exist('answer')
     [answer, ok] = listdlg('PromptString','Which stimulus was applied during these recordings?',...
         'SelectionMode','single',...
@@ -25,9 +26,9 @@ end
 switch answer
         case 1 % Liza (20->18->25->20)
         assaytype = 1; % Positive thermotaxis
-        Stim.min = 18;
-        Stim.max = 25;
-        Stim.F0 = 18;
+        Stim.min = 15;
+        Stim.max = 30;
+        Stim.F0 = 15;
         Stim.holding = 20;
         %Stim.NearTh = [19; 25];
         %Stim.AboveTh = [25];

@@ -25,7 +25,7 @@ global pltadapt
 plotflag = 1 ;
 if plteach == 1
     for i = 1:numfiles
-        DrawThePlots(Temps.full(:,i), CaResponse.full(:,i), UIDs{i});
+        DrawThePlots(Temps.full(:,i), CaResponse.full(:,i), UIDs{i}, Results.out(i));
     end
 end
 set(0,'DefaultFigureVisible','on');
@@ -38,7 +38,7 @@ if numfiles > 1
     
     % Multiple line plot
     if pltmulti == 1
-        MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n, Results.out);
+        MakeTheMultipleLinePlot(CaResponse.full, avg_Tmp, sd_Tmp, n, median(Results.out, 'omitnan'));
     end
     
      % Adaptation line plot zoomed on 

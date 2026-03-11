@@ -39,5 +39,5 @@ movegui('northeast');
 
 exportgraphics(gcf, fullfile(newdir,['/', n, '-heatmap.pdf']),'ContentType','vector');
 
-close all
+
 end
