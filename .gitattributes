@@ -31,3 +31,6 @@
 *.pdf binary
 *.png binary
 *.xlsx binary
+*.m text eol=crlf
+*.csv text eol=crlf
+*.czmac text eol=crlf
