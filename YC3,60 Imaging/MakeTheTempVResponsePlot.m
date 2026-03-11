@@ -81,8 +81,7 @@ while setaxes>0 % loop through the axes selection until you're happy
     end
 end
 
-saveas(gcf, fullfile(newdir,['/', n, '-Temperature vs CaResponse_lines']),'epsc');
-saveas(gcf, fullfile(newdir,['/', n, '-Temperature vs CaResponse_lines']),'jpeg');
+exportgraphics(gcf, fullfile(newdir,['/', n, '-Temperature vs CaResponse_lines.pdf']),'ContentType','vector');
 
 close all
 end

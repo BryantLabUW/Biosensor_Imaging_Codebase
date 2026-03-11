@@ -4,7 +4,7 @@ global assaytype
 global newdir
 global plotflag
 
-%% Draw a figure where the calcium trace is a black line
+%% Draw a figure where the neural trace is a black line
 fig=figure;
 movegui('northeast');
 
@@ -26,20 +26,7 @@ xlabel('Time (seconds)');
 
 % Give the figure a title
 currentFigure = gcf;
-if contains(pathstr,{'pASB52', 'Ss AFD'})
-    suffix = 'Ss-AFD_';
-elseif contains(pathstr,'pASB53')
-    suffix = 'Ss-BAG--rGC(35)_';
-elseif contains(pathstr,{'pASB55', 'Ss BAG'})
-    suffix = 'Ss-BAG_';
-elseif contains(pathstr,{'IK890', 'Ce AFD'})
-    suffix = 'Ce-AFD_';
-elseif contains(pathstr,{'XL115', 'Ce ASE'})
-    suffix = 'Ce-ASE_cameleon_';
-else
-    suffix = '';
-end
-title(currentFigure.Children(end), [strcat('Recording', {' '},suffix,string(name))],'Interpreter','none');
+title(currentFigure.Children(end), [strcat('Recording', {' '},string(name))],'Interpreter','none');
 
 % Adjust axis values for the plot
 if plotflag > 0
