@@ -38,3 +38,4 @@ codegen/
 # SimBiology backup files
 *.sbproj.backup
 *.sbproj.bak
+.DS_Store
